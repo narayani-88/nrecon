@@ -14,7 +14,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  useFormField,
 } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ShieldCheck, Target } from 'lucide-react';
@@ -40,18 +39,6 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
     },
   });
   
-  // This is a workaround to get the id from the form field context
-  const TargetInput = () => {
-    const { id } = useFormField();
-    const { register } = form;
-    return (
-      <div className="relative">
-        <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input id={id} placeholder="e.g., 127.0.0.1 or example.com" {...register('target')} className="pl-10 h-11 text-base" />
-      </div>
-    )
-  }
-
   return (
     <Card className="w-full shadow-lg">
       <CardHeader>
@@ -70,7 +57,7 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
                   <FormControl>
                      <div className="relative">
                       <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id={field.name} placeholder="e.g., 127.0.0.1 or example.com" {...field} className="pl-10 h-11 text-base" />
+                      <Input placeholder="e.g., 127.0.0.1 or example.com" {...field} className="pl-10 h-11 text-base" />
                     </div>
                   </FormControl>
                   <FormMessage />
