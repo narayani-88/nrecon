@@ -73,11 +73,9 @@ export async function performScan(
     const isOnline = simulatePing();
     const ports = simulatePortScan();
     
-    // Always perform DNS and WHOIS on the original target
     const dns = simulateDnsLookup(validatedTarget);
     const whois = simulateWhois(validatedTarget);
     
-    // Resolve IP for other uses, but use original target for DNS/WHOIS
     const ip = dns.find(r => r.type === 'A')?.value || (validatedTarget.match(/^\d{1,3}(\.\d{1,3}){3}$/) ? validatedTarget : 'N/A');
     const geoIp = isOnline ? MOCK_GEO_IP : null;
 
@@ -113,14 +111,14 @@ export async function performScan(
       });
     
     // Add DNS and WHOIS info to AI input if available
-    if (dns.length > 0) {
+    if (scanData.dns.length > 0) {
         aiInput.scanResults.push({
             description: 'Public DNS records found.',
             severity: 'Low',
             details: { banner: dns.map(r => `${r.type}: ${r.value}`).join(', ') }
         });
     }
-     if (whois) {
+     if (scanData.whois) {
         aiInput.scanResults.push({
             description: 'WHOIS information is public.',
             severity: 'Low',
