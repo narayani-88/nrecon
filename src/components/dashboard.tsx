@@ -19,12 +19,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertTriangle,
-  Download,
   Dna,
   FileText,
   Globe,
   HelpCircle,
-  Loader2,
   ShieldAlert,
   ShieldCheck,
   Signal,
@@ -35,10 +33,6 @@ import {
 import type { FullScanResult } from '@/lib/types';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
-import { Button } from './ui/button';
-import { useRef, useState } from 'react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 type DashboardProps = {
   data: FullScanResult;
@@ -345,72 +339,11 @@ const Details = ({ data }: DashboardProps) => {
 };
 
 export function Dashboard({ data }: DashboardProps) {
-  const reportRef = useRef<HTMLDivElement>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  const handleDownload = async () => {
-    if (!reportRef.current) return;
-    setIsDownloading(true);
-
-    // Temporarily add a class to the body to ensure we render the light theme for the PDF
-    const wasDark = document.documentElement.classList.contains('dark');
-    if (wasDark) {
-        document.documentElement.classList.remove('dark');
-    }
-
-    try {
-        const canvas = await html2canvas(reportRef.current, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: null,
-        });
-
-        const pdf = new jsPDF({
-            orientation: 'p',
-            unit: 'px',
-            format: [canvas.width, canvas.height],
-        });
-        
-        pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, canvas.width, canvas.height);
-        pdf.save(`Nrecon-Report-${data.scanData.target}-${new Date().toISOString().split('T')[0]}.pdf`);
-    } catch (error) {
-        console.error("Failed to generate PDF", error);
-    } finally {
-        // Restore dark theme if it was originally enabled
-        if (wasDark) {
-            document.documentElement.classList.add('dark');
-        }
-        setIsDownloading(false);
-    }
-  };
-
-
   return (
     <>
-      <div className="pointer-events-none fixed top-0 left-0 w-[1200px] -z-50 opacity-0 print:opacity-100">
-        <div ref={reportRef} className="p-8 bg-background">
-          <div className="grid grid-cols-3 gap-8 items-start">
-            <div className="col-span-1 flex flex-col gap-8">
-              <Summary data={data} />
-            </div>
-            <div className="col-span-2">
-              <Details data={data} />
-            </div>
-          </div>
-        </div>
-      </div>
-      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
         <div className="lg:col-span-1 flex flex-col gap-y-6 lg:sticky lg:top-24">
           <Summary data={data} />
-          <Button onClick={handleDownload} disabled={isDownloading} className="w-full">
-            {isDownloading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 h-4 w-4" />
-            )}
-            {isDownloading ? 'Generating PDF...' : 'Download Report'}
-          </Button>
         </div>
         <div className="lg:col-span-2">
           <Details data={data} />
