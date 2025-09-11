@@ -72,10 +72,13 @@ export async function performScan(
     // 1. Simulate data gathering
     const isOnline = simulatePing();
     const ports = simulatePortScan();
+    // Always perform DNS and WHOIS on the original target
     const dns = simulateDnsLookup(validatedTarget);
     const whois = simulateWhois(validatedTarget);
+    
+    // Resolve IP for other uses, but use original target for DNS/WHOIS
+    const ip = dns.find(r => r.type === 'A')?.value || (validatedTarget.match(/^\d{1,3}(\.\d{1,3}){3}$/) ? validatedTarget : 'N/A');
     const geoIp = isOnline ? MOCK_GEO_IP : null;
-    const ip = dns.find(r => r.type === 'A')?.value || validatedTarget;
 
     const scanData: ScanData = {
       target: validatedTarget,
