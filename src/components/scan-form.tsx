@@ -40,14 +40,14 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
   });
 
   return (
-    <Card className="w-full">
+    <Card className="w-full shadow-lg">
       <CardHeader>
-        <CardTitle>New Scan</CardTitle>
+        <CardTitle className="text-2xl">New Scan</CardTitle>
         <CardDescription>Enter a target IP address or hostname to begin scanning.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="target"
@@ -57,7 +57,7 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
                   <FormControl>
                     <div className="relative">
                       <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="e.g., 127.0.0.1 or example.com" {...field} className="pl-10" />
+                      <Input placeholder="e.g., 127.0.0.1 or example.com" {...field} className="pl-10 h-11 text-base" />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -68,7 +68,7 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
               control={form.control}
               name="consent"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-accent/50">
                    <FormControl>
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
@@ -84,7 +84,7 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isLoading} className="w-full">
+            <Button type="submit" disabled={isLoading} size="lg" className="w-full font-bold">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -93,7 +93,7 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
               ) : (
                 <>
                   <ShieldCheck className="mr-2 h-4 w-4" />
-                  Start Scan
+                  Start Secure Scan
                 </>
               )}
             </Button>
