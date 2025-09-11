@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Loader2, ScanLine, Shield } from 'lucide-react';
+import { ArrowLeft, Loader2, ScanLine } from 'lucide-react';
 import { ScanForm } from '@/components/scan-form';
 import { Dashboard } from '@/components/dashboard';
 import { performScan } from '@/app/actions';
@@ -71,7 +71,7 @@ export default function Home() {
              <div className="p-2 bg-primary/10 border border-primary/20 rounded-lg text-primary">
               <ScanLine className="h-6 w-6" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight">Recon Lab</h1>
+            <h1 className="text-xl font-bold tracking-tight">Nrecon</h1>
           </div>
           {view === 'dashboard' && (
             <Button variant="outline" size="sm" onClick={() => setView('form')}>
@@ -96,7 +96,7 @@ export default function Home() {
       </main>
       <footer className="p-4 border-t">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Recon Lab. For educational and authorized use only.</p>
+          <p>&copy; {new Date().getFullYear()} Nrecon. For educational and authorized use only.</p>
         </div>
       </footer>
     </div>

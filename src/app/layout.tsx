@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'Reconnaissance Lab',
+  title: 'Nrecon',
   description: 'An ethical reconnaissance and security scanning tool.',
 };
 
