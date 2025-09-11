@@ -108,5 +108,3 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
     </Card>
   );
 }
-
-    

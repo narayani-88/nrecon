@@ -275,7 +275,7 @@ const Details = ({ data }: DashboardProps) => {
             <CardHeader>
                 <CardTitle>Technology Stack</CardTitle>
                 <CardDescription>Technologies detected on {data.scanData.target}.</CardDescription>
-            </CardHeader>
+            </Header>
             <CardContent>
                  <div className="border rounded-lg overflow-x-auto">
                  <Table>
@@ -352,5 +352,3 @@ export function Dashboard({ data }: DashboardProps) {
     </>
   );
 }
-
-    

@@ -8,7 +8,6 @@ import { performScan } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import type { FullScanResult } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ScanHistory } from '@/components/scan-history';
 import { useScanHistory } from '@/hooks/use-scan-history';
 import { Logo } from '@/components/icons';
 
@@ -65,9 +64,6 @@ export default function Home() {
     return (
       <div className="w-full max-w-lg mx-auto">
         <ScanForm onSubmit={handleScan} isLoading={isLoading} />
-        <div className="mt-12">
-          <ScanHistory history={history} onSelect={handleHistorySelect} onClear={handleClearHistory} />
-        </div>
       </div>
     );
   };
