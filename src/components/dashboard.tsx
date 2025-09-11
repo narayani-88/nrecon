@@ -289,13 +289,13 @@ export function Dashboard({ data }: DashboardProps) {
 
   return (
     <>
-      <div className="absolute top-0 left-0 w-full h-full -z-50 opacity-0" id="pdf-container">
+      <div className="pointer-events-none fixed top-0 left-0 w-[1200px] -z-50 opacity-0" id="pdf-container">
         <div ref={reportRef} className="p-8 bg-background">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
-            <div className="lg:col-span-1 space-y-6">
+          <div className="grid grid-cols-3 gap-8 items-start">
+            <div className="col-span-1 flex flex-col gap-8">
               <Summary data={data} />
             </div>
-            <div className="lg:col-span-2">
+            <div className="col-span-2">
               <Details data={data} />
             </div>
           </div>
