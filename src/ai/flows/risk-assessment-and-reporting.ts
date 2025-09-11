@@ -50,7 +50,7 @@ const prompt = ai.definePrompt({
   {{#each scanResults}}
   - Description: {{this.description}}
     Severity: {{this.severity}}
-    Details: {{JSON.stringify this.details}}
+    Details: {{#if this.details}}{{JSON.stringify this.details}}{{else}}N/A{{/if}}
   {{/each}}
   `,
 });

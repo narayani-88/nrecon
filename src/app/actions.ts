@@ -7,7 +7,6 @@ import { z } from 'zod';
 const targetSchema = z.string().min(1, 'Target cannot be empty.');
 
 // Mock data generation helpers
-const MOCK_IPS = ['8.8.8.8', '1.1.1.1', '208.67.222.222', '192.168.1.1', '10.0.0.1'];
 const MOCK_PORTS_TO_SCAN = [21, 22, 25, 80, 110, 143, 443, 3306, 3389, 5432, 8080];
 const MOCK_DNS_RECORDS: Omit<DnsRecord, 'ttl'>[] = [
   { type: 'A', value: '142.250.191.78' },
@@ -25,8 +24,8 @@ const MOCK_GEO_IP: GeoIpData = {
 };
 const MOCK_WHOIS: WhoisData = {
     registrar: "MarkMonitor Inc.",
-    creationDate: "1997-09-15T04:00:00Z",
-    expirationDate: "2028-09-14T04:00:00Z",
+    creationDate: "1997-09-15T04:00:00.000Z",
+    expirationDate: "2028-09-14T04:00:00.000Z",
     raw: `Domain Name: GOOGLE.COM
 Registrar: MarkMonitor Inc.
 Creation Date: 1997-09-15T04:00:00Z
