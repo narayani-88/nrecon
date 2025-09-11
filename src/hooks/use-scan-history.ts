@@ -16,7 +16,7 @@ export function useScanHistory() {
       if (item) {
         setHistory(JSON.parse(item));
       }
-    } catch (error)
+    } catch (error) {
       console.error('Failed to load scan history from localStorage', error);
     } finally {
         setIsLoaded(true);
