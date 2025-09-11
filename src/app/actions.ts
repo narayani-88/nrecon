@@ -38,12 +38,16 @@ Registrar Abuse Contact Phone: +1.2086851750
 const simulatePing = () => Math.random() > 0.1; // 90% success rate
 
 const simulateDnsLookup = (target: string): DnsRecord[] => {
-  if (target.match(/^\d{1,3}(\.\d{1,3}){3}$/)) return []; // No DNS for IP
+  if (target.match(/^\d{1,3}(\.\d{1,3}){3}$/)) {
+    return []; // No DNS for IP addresses
+  }
   return MOCK_DNS_RECORDS.map(r => ({...r, ttl: Math.floor(Math.random() * 3600)}));
 };
 
 const simulateWhois = (target: string): WhoisData | null => {
-   if (target.match(/^\d{1,3}(\.\d{1,3}){3}$/)) return null; // No WHOIS for IP
+   if (target.match(/^\d{1,3}(\.\d{1,3}){3}$/)) {
+    return null; // No WHOIS for IP addresses
+   }
    return MOCK_WHOIS;
 }
 
@@ -73,9 +77,11 @@ export async function performScan(
     const isOnline = simulatePing();
     const ports = simulatePortScan();
     
+    // Always perform lookups on the original validated target
     const dns = simulateDnsLookup(validatedTarget);
     const whois = simulateWhois(validatedTarget);
     
+    // Determine the IP address. Use the 'A' record if available, otherwise check if the target itself is an IP.
     const ip = dns.find(r => r.type === 'A')?.value || (validatedTarget.match(/^\d{1,3}(\.\d{1,3}){3}$/) ? validatedTarget : 'N/A');
     const geoIp = isOnline ? MOCK_GEO_IP : null;
 
