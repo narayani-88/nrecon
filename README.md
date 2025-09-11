@@ -12,6 +12,7 @@ To get the application running on your local machine, follow these steps:
 
 - Node.js (v18 or later)
 - npm or yarn
+- Firebase CLI (for deployment)
 
 ### Installation
 
@@ -40,6 +41,26 @@ This project requires two processes to run concurrently for development: the Nex
 
 3.  **Open the App**:
     Once both servers are running, open your web browser and navigate to `http://localhost:9002` (or the URL provided by the `npm run dev` command).
+
+### Deployment
+
+To deploy the application and make it publicly available, you can use Firebase App Hosting.
+
+1.  **Login to Firebase**:
+    ```bash
+    firebase login
+    ```
+
+2.  **Initialize App Hosting**: If you haven't already connected this project to Firebase, run the following command and follow the prompts.
+    ```bash
+    firebase init apphosting
+    ```
+
+3.  **Deploy the application**:
+    ```bash
+    firebase deploy
+    ```
+    After the command completes, you will get a public URL for your live application.
 
 ## Key Features
 
