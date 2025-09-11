@@ -39,6 +39,18 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
       consent: false,
     },
   });
+  
+  // This is a workaround to get the id from the form field context
+  const TargetInput = () => {
+    const { id } = useFormField();
+    const { register } = form;
+    return (
+      <div className="relative">
+        <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input id={id} placeholder="e.g., 127.0.0.1 or example.com" {...register('target')} className="pl-10 h-11 text-base" />
+      </div>
+    )
+  }
 
   return (
     <Card className="w-full shadow-lg">
@@ -56,7 +68,7 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
                 <FormItem>
                   <FormLabel>Target</FormLabel>
                   <FormControl>
-                    <div className="relative">
+                     <div className="relative">
                       <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input id={field.name} placeholder="e.g., 127.0.0.1 or example.com" {...field} className="pl-10 h-11 text-base" />
                     </div>
