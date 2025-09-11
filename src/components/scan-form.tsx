@@ -52,26 +52,22 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
             <FormField
               control={form.control}
               name="target"
-              render={({ field }) => {
-                const { id } = useFormField();
-                return (
-                  <FormItem>
-                    <FormLabel>Target</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id={id}
-                          placeholder="e.g., 127.0.0.1 or example.com"
-                          {...field}
-                          className="pl-10 h-11 text-base"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Target</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="e.g., 127.0.0.1 or example.com"
+                        {...field}
+                        className="pl-10 h-11 text-base"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
             <FormField
               control={form.control}
@@ -112,3 +108,5 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
     </Card>
   );
 }
+
+    

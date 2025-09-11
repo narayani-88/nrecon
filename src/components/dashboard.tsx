@@ -305,7 +305,7 @@ const Details = ({ data }: DashboardProps) => {
             <CardHeader>
                 <CardTitle>Exposed Services</CardTitle>
                 <CardDescription>Potentially vulnerable services discovered on the network.</CardDescription>
-            </CardHeader>
+            </Header>
             <CardContent>
                  <div className="border rounded-lg overflow-x-auto">
                  <Table>
@@ -352,3 +352,5 @@ export function Dashboard({ data }: DashboardProps) {
     </>
   );
 }
+
+    
