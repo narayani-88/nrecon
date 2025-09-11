@@ -132,7 +132,7 @@ const Details = ({ data }: DashboardProps) => {
 
   return (
     <Tabs defaultValue="report" className="w-full">
-       <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-7 mb-4">
+       <TabsList className="mb-4 h-auto flex-wrap justify-start">
         <TabsTrigger value="report"><FileText className="w-4 h-4 mr-2"/>Risk Report</TabsTrigger>
         <TabsTrigger value="ports"><HelpCircle className="w-4 h-4 mr-2"/>Port Scan</TabsTrigger>
         <TabsTrigger value="dns" disabled={!hasDns}><Dna className="w-4 h-4 mr-2"/>DNS</TabsTrigger>
@@ -148,7 +148,7 @@ const Details = ({ data }: DashboardProps) => {
             <CardDescription>{data.aiAnalysis.summary}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="border rounded-lg">
+            <div className="border rounded-lg overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -178,7 +178,7 @@ const Details = ({ data }: DashboardProps) => {
             <CardDescription>Results of TCP connect scans on common ports.</CardDescription>
           </CardHeader>
           <CardContent>
-             <div className="border rounded-lg">
+             <div className="border rounded-lg overflow-x-auto">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -219,7 +219,7 @@ const Details = ({ data }: DashboardProps) => {
             <CardDescription>Domain Name System records for {data.scanData.target}.</CardDescription>
           </CardHeader>
           <CardContent>
-             <div className="border rounded-lg">
+             <div className="border rounded-lg overflow-x-auto">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -268,7 +268,7 @@ const Details = ({ data }: DashboardProps) => {
                 <CardDescription>Subdomains found during enumeration for {data.scanData.target}.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="border rounded-lg p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                <div className="border rounded-lg p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {data.scanData.subdomains.map(sub => (
                         <div key={sub} className="p-2 bg-accent rounded-md text-sm font-mono truncate">{sub}</div>
                     ))}
@@ -283,7 +283,7 @@ const Details = ({ data }: DashboardProps) => {
                 <CardDescription>Technologies detected on {data.scanData.target}.</CardDescription>
             </CardHeader>
             <CardContent>
-                 <div className="border rounded-lg">
+                 <div className="border rounded-lg overflow-x-auto">
                  <Table>
                     <TableHeader>
                         <TableRow>
@@ -313,7 +313,7 @@ const Details = ({ data }: DashboardProps) => {
                 <CardDescription>Potentially vulnerable services discovered on the network.</CardDescription>
             </CardHeader>
             <CardContent>
-                 <div className="border rounded-lg">
+                 <div className="border rounded-lg overflow-x-auto">
                  <Table>
                     <TableHeader>
                         <TableRow>
@@ -352,17 +352,17 @@ export function Dashboard({ data }: DashboardProps) {
     if (!reportRef.current) return;
     setIsDownloading(true);
 
+    // Temporarily add a class to the body to ensure we render the light theme for the PDF
+    const wasDark = document.documentElement.classList.contains('dark');
+    if (wasDark) {
+        document.documentElement.classList.remove('dark');
+    }
+
     try {
         const canvas = await html2canvas(reportRef.current, {
             scale: 2,
             useCORS: true,
             backgroundColor: null,
-            // This is a hack to deal with a bug in html2canvas where it doesn't render the dark theme correctly
-            onclone: (document) => {
-              if(document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-              }
-            }
         });
 
         const pdf = new jsPDF({
@@ -376,6 +376,10 @@ export function Dashboard({ data }: DashboardProps) {
     } catch (error) {
         console.error("Failed to generate PDF", error);
     } finally {
+        // Restore dark theme if it was originally enabled
+        if (wasDark) {
+            document.documentElement.classList.add('dark');
+        }
         setIsDownloading(false);
     }
   };
@@ -383,8 +387,8 @@ export function Dashboard({ data }: DashboardProps) {
 
   return (
     <>
-      <div className="pointer-events-none fixed top-0 left-0 w-[1200px] -z-50 opacity-0" id="pdf-container">
-        <div ref={reportRef} className="p-8 bg-background dark">
+      <div className="pointer-events-none fixed top-0 left-0 w-[1200px] -z-50 opacity-0 print:opacity-100">
+        <div ref={reportRef} className="p-8 bg-background">
           <div className="grid grid-cols-3 gap-8 items-start">
             <div className="col-span-1 flex flex-col gap-8">
               <Summary data={data} />
@@ -397,7 +401,7 @@ export function Dashboard({ data }: DashboardProps) {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
-        <div className="lg:col-span-1 flex flex-col gap-y-6 lg:sticky lg:top-20">
+        <div className="lg:col-span-1 flex flex-col gap-y-6 lg:sticky lg:top-24">
           <Summary data={data} />
           <Button onClick={handleDownload} disabled={isDownloading} className="w-full">
             {isDownloading ? (

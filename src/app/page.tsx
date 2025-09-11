@@ -88,7 +88,7 @@ export default function Home() {
           )}
         </div>
       </header>
-      <main className="flex-grow container mx-auto p-4 md:p-8">
+      <main className="flex-grow container mx-auto p-4 sm:p-6 md:p-8">
         {isLoading && view === 'form' ? (
           <div className="flex flex-col items-center justify-center text-center h-full max-w-md mx-auto py-20">
             <Loader2 className="h-12 w-12 animate-spin text-primary mb-6" />
