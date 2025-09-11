@@ -72,6 +72,7 @@ export async function performScan(
     // 1. Simulate data gathering
     const isOnline = simulatePing();
     const ports = simulatePortScan();
+    
     // Always perform DNS and WHOIS on the original target
     const dns = simulateDnsLookup(validatedTarget);
     const whois = simulateWhois(validatedTarget);
@@ -93,20 +94,23 @@ export async function performScan(
 
     // 2. Prepare data for AI analysis
     const aiInput: AnalyzeScanResultsInput = {
-      scanResults: scanData.ports
-        .filter(p => p.status === 'open')
-        .map(p => {
-          let severity: 'Low' | 'Medium' | 'High' = 'Low';
-          if ([80, 443].includes(p.port)) severity = 'Medium';
-          if ([22, 3389, 3306].includes(p.port)) severity = 'High';
-          
-          return {
-            description: `Port ${p.port}/${p.protocol} (${p.service}) is open.`,
-            severity,
-            details: { banner: p.banner || 'N/A' },
-          };
-        }),
+      scanResults: [],
     };
+    
+    // Add open ports to AI input
+    scanData.ports
+      .filter(p => p.status === 'open')
+      .forEach(p => {
+        let severity: 'Low' | 'Medium' | 'High' = 'Low';
+        if ([80, 443].includes(p.port)) severity = 'Medium';
+        if ([22, 3389, 3306].includes(p.port)) severity = 'High';
+        
+        aiInput.scanResults.push({
+          description: `Port ${p.port}/${p.protocol} (${p.service}) is open.`,
+          severity,
+          details: { banner: p.banner || 'N/A' },
+        });
+      });
     
     // Add DNS and WHOIS info to AI input if available
     if (dns.length > 0) {
@@ -123,7 +127,6 @@ export async function performScan(
             details: { banner: `Registrar: ${whois.registrar}` }
         });
     }
-
 
     // 3. Call GenAI Flow
     const aiAnalysis = await analyzeScanResults(aiInput);
