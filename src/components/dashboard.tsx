@@ -269,6 +269,12 @@ export function Dashboard({ data }: DashboardProps) {
             scale: 2,
             useCORS: true,
             backgroundColor: null,
+            // This is a hack to deal with a bug in html2canvas where it doesn't render the dark theme correctly
+            onclone: (document) => {
+              if(document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+              }
+            }
         });
 
         const pdf = new jsPDF({
@@ -290,7 +296,7 @@ export function Dashboard({ data }: DashboardProps) {
   return (
     <>
       <div className="pointer-events-none fixed top-0 left-0 w-[1200px] -z-50 opacity-0" id="pdf-container">
-        <div ref={reportRef} className="p-8 bg-background">
+        <div ref={reportRef} className="p-8 bg-background dark">
           <div className="grid grid-cols-3 gap-8 items-start">
             <div className="col-span-1 flex flex-col gap-8">
               <Summary data={data} />
@@ -303,10 +309,14 @@ export function Dashboard({ data }: DashboardProps) {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
-        <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-20">
+        <div className="lg:col-span-1 flex flex-col gap-y-6 lg:sticky lg:top-20">
           <Summary data={data} />
           <Button onClick={handleDownload} disabled={isDownloading} className="w-full">
-            {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
+            {isDownloading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
             {isDownloading ? 'Generating PDF...' : 'Download Report'}
           </Button>
         </div>
