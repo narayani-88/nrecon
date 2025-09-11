@@ -29,6 +29,19 @@ export type PortScanResult = {
   banner?: string;
 };
 
+export type Technology = {
+    name: string;
+    category: 'Frontend' | 'Backend' | 'Web Server' | 'Database' | 'CMS' | 'Library';
+    version: string | null;
+}
+
+export type ExposedService = {
+    port: number;
+    service: string;
+    version: string;
+    potentialCVE: string | null;
+}
+
 export type ScanData = {
   target: string;
   ip: string;
@@ -38,6 +51,9 @@ export type ScanData = {
   dns: DnsRecord[];
   whois: WhoisData | null;
   ports: PortScanResult[];
+  technologies: Technology[];
+  subdomains: string[];
+  exposedServices: ExposedService[];
 };
 
 export type FullScanResult = {

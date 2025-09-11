@@ -13,7 +13,7 @@ import {z} from 'genkit';
 const ScanResultSchema = z.object({
   description: z.string().describe('A description of the scan finding.'),
   severity: z.enum(['Low', 'Medium', 'High']).describe('The severity of the finding.'),
-  details: z.record(z.any()).describe('Detailed information about the finding.'),
+  details: z.record(z.any()).describe('Detailed information about the finding, such as a software banner, discovered subdomains, or technology versions.'),
 });
 
 const AnalyzeScanResultsInputSchema = z.object({
@@ -41,12 +41,12 @@ const prompt = ai.definePrompt({
   name: 'analyzeScanResultsPrompt',
   input: {schema: AnalyzeScanResultsInputSchema},
   output: {schema: AnalyzeScanResultsOutputSchema},
-  prompt: `You are a security expert analyzing scan results to assess risk and suggest remediation.
+  prompt: `You are a security expert analyzing a reconnaissance report to assess risk and suggest remediation.
 
-  Analyze the following scan findings and for each, assess the risk level (Low, Medium, High) and suggest a remediation.
-  Also provide a summary of the overall risk assessment.
+  Analyze the following findings. For each one, assess the risk level (Low, Medium, High) and provide a concise, actionable remediation suggestion.
+  Finally, provide a brief, high-level summary of the target's overall security posture based on all findings.
 
-  Scan Results:
+  Scan Findings:
   {{#each scanResults}}
   - Description: {{this.description}}
     Severity: {{this.severity}}

@@ -1,7 +1,7 @@
 'use server';
 
 import { analyzeScanResults, AnalyzeScanResultsInput } from '@/ai/flows/risk-assessment-and-reporting';
-import { DnsRecord, FullScanResult, GeoIpData, PortScanResult, ScanData, WhoisData } from '@/lib/types';
+import { DnsRecord, FullScanResult, GeoIpData, PortScanResult, ScanData, WhoisData, Technology, ExposedService } from '@/lib/types';
 import { z } from 'zod';
 
 const targetSchema = z.string().min(1, 'Target cannot be empty.');
@@ -14,7 +14,20 @@ const MOCK_DNS_RECORDS: Omit<DnsRecord, 'ttl'>[] = [
   { type: 'MX', value: '10 smtp.google.com' },
   { type: 'NS', value: 'ns1.google.com' },
   { type: 'TXT', value: '"v=spf1 include:_spf.google.com ~all"' },
+  { type: 'CNAME', value: 'www.google.com'},
 ];
+const MOCK_SUBDOMAINS = ['www', 'mail', 'api', 'dev', 'blog', 'shop'];
+const MOCK_TECHNOLOGIES: Technology[] = [
+    { name: 'React', category: 'Frontend', version: '18.2.0' },
+    { name: 'Next.js', category: 'Frontend', version: '14.1.0' },
+    { name: 'Node.js', category: 'Backend', version: '20.11.0' },
+    { name: 'nginx', category: 'Web Server', version: '1.25.3' },
+];
+const MOCK_EXPOSED_SERVICES: ExposedService[] = [
+    { port: 21, service: 'FTP', version: 'vsftpd 3.0.3', potentialCVE: 'CVE-2015-1419'},
+    { port: 3306, service: 'MySQL', version: '5.7.22', potentialCVE: 'CVE-2018-2780' }
+]
+
 const MOCK_GEO_IP: GeoIpData = {
   country: 'United States',
   region: 'California',
@@ -38,16 +51,22 @@ Registrar Abuse Contact Phone: +1.2086851750
 const simulatePing = () => Math.random() > 0.1; // 90% success rate
 
 const simulateDnsLookup = (target: string): DnsRecord[] => {
-  // IP addresses don't have DNS records in the same way domains do.
   if (target.match(/^\d{1,3}(\.\d{1,3}){3}$/)) {
     return [];
   }
   return MOCK_DNS_RECORDS.map(r => ({...r, ttl: Math.floor(Math.random() * 3600)}));
 };
 
+const simulateSubdomainEnum = (target: string): string[] => {
+    if (target.match(/^\d{1,3}(\.\d{1,3}){3}$/)) {
+        return [];
+    }
+    return MOCK_SUBDOMAINS.map(sub => `${sub}.${target}`);
+}
+
 const simulateWhois = (target: string): WhoisData | null => {
    if (target.match(/^\d{1,3}(\.\d{1,3}){3}$/)) {
-    return null; // No WHOIS for IP addresses
+    return null;
    }
    return MOCK_WHOIS;
 }
@@ -81,6 +100,7 @@ export async function performScan(
     // Always perform lookups on the original validated target
     const dns = simulateDnsLookup(validatedTarget);
     const whois = simulateWhois(validatedTarget);
+    const subdomains = simulateSubdomainEnum(validatedTarget);
     
     // Determine the IP address. Use the 'A' record if available, otherwise check if the target itself is an IP.
     const ip = dns.find(r => r.type === 'A')?.value || (validatedTarget.match(/^\d{1,3}(\.\d{1,3}){3}$/) ? validatedTarget : 'N/A');
@@ -95,6 +115,9 @@ export async function performScan(
       dns,
       whois,
       geoIp,
+      technologies: isOnline ? MOCK_TECHNOLOGIES : [],
+      subdomains,
+      exposedServices: isOnline ? MOCK_EXPOSED_SERVICES : []
     };
 
     // 2. Prepare data for AI analysis
@@ -132,6 +155,33 @@ export async function performScan(
             details: { banner: `Registrar: ${whois.registrar}` }
         });
     }
+
+    if (scanData.subdomains.length > 0) {
+        aiInput.scanResults.push({
+            description: 'Subdomains discovered.',
+            severity: 'Low',
+            details: { banner: `Found subdomains: ${scanData.subdomains.join(', ')}`}
+        });
+    }
+
+    if (scanData.technologies.length > 0) {
+        aiInput.scanResults.push({
+            description: 'Technology stack identified.',
+            severity: 'Low',
+            details: { banner: `Technologies: ${scanData.technologies.map(t => `${t.name} ${t.version || ''}`).join(', ')}`}
+        });
+    }
+
+     if (scanData.exposedServices.length > 0) {
+        scanData.exposedServices.forEach(s => {
+            aiInput.scanResults.push({
+                description: `Exposed service ${s.service} on port ${s.port}.`,
+                severity: 'High',
+                details: { banner: `Version: ${s.version}, Potential Vulnerability: ${s.potentialCVE || 'N/A'}`}
+            });
+        });
+    }
+
 
     // 3. Call GenAI Flow
     const aiAnalysis = await analyzeScanResults(aiInput);

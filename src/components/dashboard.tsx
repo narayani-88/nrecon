@@ -28,6 +28,9 @@ import {
   ShieldAlert,
   ShieldCheck,
   Signal,
+  Network,
+  Layers,
+  Fingerprint,
 } from 'lucide-react';
 import type { FullScanResult } from '@/lib/types';
 import { Separator } from './ui/separator';
@@ -123,14 +126,20 @@ const Summary = ({ data }: DashboardProps) => {
 const Details = ({ data }: DashboardProps) => {
   const hasDns = data.scanData.dns.length > 0;
   const hasWhois = !!data.scanData.whois;
+  const hasSubdomains = data.scanData.subdomains.length > 0;
+  const hasTech = data.scanData.technologies.length > 0;
+  const hasExposedServices = data.scanData.exposedServices.length > 0;
 
   return (
     <Tabs defaultValue="report" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
+       <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-7 mb-4">
         <TabsTrigger value="report"><FileText className="w-4 h-4 mr-2"/>Risk Report</TabsTrigger>
         <TabsTrigger value="ports"><HelpCircle className="w-4 h-4 mr-2"/>Port Scan</TabsTrigger>
         <TabsTrigger value="dns" disabled={!hasDns}><Dna className="w-4 h-4 mr-2"/>DNS</TabsTrigger>
         <TabsTrigger value="whois" disabled={!hasWhois}><Globe className="w-4 h-4 mr-2"/>WHOIS</TabsTrigger>
+        <TabsTrigger value="subdomains" disabled={!hasSubdomains}><Network className="w-4 h-4 mr-2"/>Subdomains</TabsTrigger>
+        <TabsTrigger value="tech" disabled={!hasTech}><Layers className="w-4 h-4 mr-2"/>Tech Stack</TabsTrigger>
+        <TabsTrigger value="exposed" disabled={!hasExposedServices}><Fingerprint className="w-4 h-4 mr-2"/>Exposed</TabsTrigger>
       </TabsList>
       <TabsContent value="report">
         <Card>
@@ -250,6 +259,85 @@ const Details = ({ data }: DashboardProps) => {
                 {data.scanData.whois?.raw}
             </p>
           </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="subdomains">
+        <Card>
+            <CardHeader>
+                <CardTitle>Discovered Subdomains</CardTitle>
+                <CardDescription>Subdomains found during enumeration for {data.scanData.target}.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="border rounded-lg p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {data.scanData.subdomains.map(sub => (
+                        <div key={sub} className="p-2 bg-accent rounded-md text-sm font-mono truncate">{sub}</div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+      </TabsContent>
+       <TabsContent value="tech">
+        <Card>
+            <CardHeader>
+                <CardTitle>Technology Stack</CardTitle>
+                <CardDescription>Technologies detected on {data.scanData.target}.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <div className="border rounded-lg">
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Version</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {data.scanData.technologies.map((tech) => (
+                            <TableRow key={tech.name}>
+                                <TableCell className="font-medium">{tech.name}</TableCell>
+                                <TableCell><Badge variant="secondary">{tech.category}</Badge></TableCell>
+                                <TableCell className="font-mono text-xs">{tech.version || 'N/A'}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                </div>
+            </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="exposed">
+        <Card>
+            <CardHeader>
+                <CardTitle>Exposed Services</CardTitle>
+                <CardDescription>Potentially vulnerable services discovered on the network.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <div className="border rounded-lg">
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Port</TableHead>
+                            <TableHead>Service</TableHead>
+                             <TableHead>Version</TableHead>
+                            <TableHead>Potential CVE</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {data.scanData.exposedServices.map((service) => (
+                            <TableRow key={service.port} className="[&_td]:text-destructive/80">
+                                <TableCell>{service.port}</TableCell>
+                                <TableCell>{service.service}</TableCell>
+                                <TableCell className="font-mono text-xs">{service.version}</TableCell>
+                                <TableCell className="font-mono text-xs hover:underline cursor-pointer" onClick={() => window.open(`https://www.cve.org/CVERecord?id=${service.potentialCVE}`, '_blank')}>
+                                    {service.potentialCVE}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                </div>
+            </CardContent>
         </Card>
       </TabsContent>
     </Tabs>
