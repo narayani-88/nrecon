@@ -352,5 +352,3 @@ export function Dashboard({ data }: DashboardProps) {
     </>
   );
 }
-
-    
