@@ -18,7 +18,7 @@ export default function Home() {
   const [scanResult, setScanResult] = useState<FullScanResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { history, addScanToHistory, getScanById } = useScanHistory();
+  const { history, addScanToHistory, getScanById, clearHistory } = useScanHistory();
 
   const handleScan = async (data: { target: string }) => {
     setIsLoading(true);
@@ -47,6 +47,14 @@ export default function Home() {
       setView('dashboard');
     }
   };
+  
+  const handleClearHistory = () => {
+    clearHistory();
+    toast({
+        title: 'History Cleared',
+        description: 'Your scan history has been removed.',
+    });
+  }
 
   const renderContent = () => {
     if (view === 'dashboard' && scanResult) {
@@ -57,7 +65,7 @@ export default function Home() {
       <div className="w-full max-w-lg mx-auto">
         <ScanForm onSubmit={handleScan} isLoading={isLoading} />
         <div className="mt-12">
-          <ScanHistory history={history} onSelect={handleHistorySelect} />
+          <ScanHistory history={history} onSelect={handleHistorySelect} onClear={handleClearHistory} />
         </div>
       </div>
     );

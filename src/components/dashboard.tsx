@@ -19,20 +19,23 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertTriangle,
-  CheckCircle,
+  Download,
   Dna,
   FileText,
   Globe,
   HelpCircle,
+  Loader2,
   ShieldAlert,
   ShieldCheck,
   Signal,
-  Server,
-  Key,
 } from 'lucide-react';
-import type { FullScanResult, PortScanResult } from '@/lib/types';
+import type { FullScanResult } from '@/lib/types';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
+import { useRef, useState } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 type DashboardProps = {
   data: FullScanResult;
@@ -118,7 +121,6 @@ const Summary = ({ data }: DashboardProps) => {
 };
 
 const Details = ({ data }: DashboardProps) => {
-  const openPorts = data.scanData.ports.filter(p => p.status === 'open');
   const hasDns = data.scanData.dns.length > 0;
   const hasWhois = !!data.scanData.whois;
 
@@ -255,14 +257,63 @@ const Details = ({ data }: DashboardProps) => {
 };
 
 export function Dashboard({ data }: DashboardProps) {
+  const reportRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!reportRef.current) return;
+    setIsDownloading(true);
+
+    try {
+        const canvas = await html2canvas(reportRef.current, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: null,
+        });
+
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'px',
+            format: [canvas.width, canvas.height],
+        });
+        
+        pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(`Nrecon-Report-${data.scanData.target}-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+        console.error("Failed to generate PDF", error);
+    } finally {
+        setIsDownloading(false);
+    }
+  };
+
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
-      <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-20">
-        <Summary data={data} />
+    <>
+      <div className="absolute top-0 left-0 w-full h-full -z-50 opacity-0" id="pdf-container">
+        <div ref={reportRef} className="p-8 bg-background">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
+            <div className="lg:col-span-1 space-y-6">
+              <Summary data={data} />
+            </div>
+            <div className="lg:col-span-2">
+              <Details data={data} />
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="lg:col-span-2">
-        <Details data={data} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
+        <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-20">
+          <Summary data={data} />
+          <Button onClick={handleDownload} disabled={isDownloading} className="w-full">
+            {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
+            {isDownloading ? 'Generating PDF...' : 'Download Report'}
+          </Button>
+        </div>
+        <div className="lg:col-span-2">
+          <Details data={data} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

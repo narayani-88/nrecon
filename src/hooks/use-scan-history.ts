@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { FullScanResult } from '@/lib/types';
 
-const HISTORY_KEY = 'recon-lab-scan-history';
+const HISTORY_KEY = 'nrecon-scan-history';
 const MAX_HISTORY_ITEMS = 10;
 
 export function useScanHistory() {
@@ -16,7 +16,7 @@ export function useScanHistory() {
       if (item) {
         setHistory(JSON.parse(item));
       }
-    } catch (error) {
+    } catch (error)
       console.error('Failed to load scan history from localStorage', error);
     } finally {
         setIsLoaded(true);
@@ -36,9 +36,19 @@ export function useScanHistory() {
     }
   }, [isLoaded]);
 
+  const clearHistory = useCallback(() => {
+    if (!isLoaded) return;
+    try {
+        setHistory([]);
+        window.localStorage.removeItem(HISTORY_KEY);
+    } catch (error) {
+        console.error('Failed to clear scan history from localStorage', error);
+    }
+  }, [isLoaded]);
+
   const getScanById = useCallback((id: string) => {
     return history.find(scan => scan.id === id) || null;
   }, [history]);
 
-  return { history, addScanToHistory, getScanById, isLoaded };
+  return { history, addScanToHistory, getScanById, clearHistory, isLoaded };
 }

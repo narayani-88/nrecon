@@ -13,7 +13,7 @@ import {z} from 'genkit';
 const ScanResultSchema = z.object({
   description: z.string().describe('A description of the scan finding.'),
   severity: z.enum(['Low', 'Medium', 'High']).describe('The severity of the finding.'),
-  details: z.record(z.string()).describe('Detailed information about the finding.'),
+  details: z.record(z.any()).describe('Detailed information about the finding.'),
 });
 
 const AnalyzeScanResultsInputSchema = z.object({

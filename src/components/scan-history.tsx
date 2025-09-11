@@ -4,9 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { ScrollArea } from './ui/scroll-area';
 import { Button } from './ui/button';
 import type { FullScanResult } from '@/lib/types';
-import { History, ShieldAlert, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { History, ShieldAlert, ShieldCheck, AlertTriangle, Trash2 } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 
 const RiskIcon = ({ level }: { level: 'Low' | 'Medium' | 'High' }) => {
@@ -18,9 +29,10 @@ const RiskIcon = ({ level }: { level: 'Low' | 'Medium' | 'High' }) => {
 type ScanHistoryProps = {
   history: FullScanResult[];
   onSelect: (id: string) => void;
+  onClear: () => void;
 };
 
-export function ScanHistory({ history, onSelect }: ScanHistoryProps) {
+export function ScanHistory({ history, onSelect, onClear }: ScanHistoryProps) {
   
   const getOverallRisk = (scan: FullScanResult): 'Low' | 'Medium' | 'High' => {
      if (scan.aiAnalysis.riskAssessments.some(r => r.riskLevel === 'High')) return 'High';
@@ -46,9 +58,28 @@ export function ScanHistory({ history, onSelect }: ScanHistoryProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Scan History</CardTitle>
-        <CardDescription>Review your recent scans.</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+            <CardTitle>Scan History</CardTitle>
+            <CardDescription>Review your recent scans.</CardDescription>
+        </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="icon"><Trash2 className="h-4 w-4" /></Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete your scan history.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={onClear}>Continue</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-72">
