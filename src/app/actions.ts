@@ -38,8 +38,9 @@ Registrar Abuse Contact Phone: +1.2086851750
 const simulatePing = () => Math.random() > 0.1; // 90% success rate
 
 const simulateDnsLookup = (target: string): DnsRecord[] => {
+  // IP addresses don't have DNS records in the same way domains do.
   if (target.match(/^\d{1,3}(\.\d{1,3}){3}$/)) {
-    return []; // No DNS for IP addresses
+    return [];
   }
   return MOCK_DNS_RECORDS.map(r => ({...r, ttl: Math.floor(Math.random() * 3600)}));
 };
