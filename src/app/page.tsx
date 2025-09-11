@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Loader2, ScanLine } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { ScanForm } from '@/components/scan-form';
 import { Dashboard } from '@/components/dashboard';
 import { performScan } from '@/app/actions';
@@ -10,6 +10,7 @@ import type { FullScanResult } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ScanHistory } from '@/components/scan-history';
 import { useScanHistory } from '@/hooks/use-scan-history';
+import { Logo } from '@/components/icons';
 
 type View = 'form' | 'dashboard';
 
@@ -74,12 +75,10 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container h-14 flex items-center justify-between">
+        <div className="container h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-primary/10 border border-primary/20 rounded-lg text-primary">
-              <ScanLine className="h-6 w-6" />
-            </div>
-            <h1 className="text-xl font-bold tracking-tight">Nrecon</h1>
+             <Logo className="h-8 w-8 text-primary" />
+            <h1 className="text-xl font-bold tracking-tight text-foreground">Nrecon</h1>
           </div>
           {view === 'dashboard' && (
             <Button variant="outline" size="sm" onClick={() => setView('form')}>
