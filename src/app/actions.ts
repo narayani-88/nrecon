@@ -110,14 +110,14 @@ export async function performScan(
         aiInput.scanResults.push({
             description: 'Public DNS records found.',
             severity: 'Low',
-            details: { records: dns.slice(0, 3) } // Send a sample
+            details: { banner: dns.map(r => `${r.type}: ${r.value}`).join(', ') }
         });
     }
      if (whois) {
         aiInput.scanResults.push({
             description: 'WHOIS information is public.',
             severity: 'Low',
-            details: { registrar: whois.registrar, creationDate: whois.creationDate }
+            details: { banner: `Registrar: ${whois.registrar}` }
         });
     }
 
