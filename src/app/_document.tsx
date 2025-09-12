@@ -1,9 +1,9 @@
-import { Html, Head, Main, NextScript } from 'next/document';
+import { Html, Head, Main, NextScript, DocumentContext } from 'next/document';
 
-export default function Document() {
+export default function Document({ nonce }: { nonce?: string }) {
   return (
     <Html lang="en">
-      <Head>
+      <Head nonce={nonce}>
         <meta charSet="utf-8" />
         <meta name="application-name" content="Nrecon" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -28,8 +28,14 @@ export default function Document() {
       </Head>
       <body>
         <Main />
-        <NextScript />
+        <NextScript nonce={nonce} />
       </body>
     </Html>
   );
 }
+
+Document.getInitialProps = async (ctx: DocumentContext) => {
+  const initialProps = await ctx.defaultGetInitialProps(ctx);
+  const nonce = ctx.req?.headers['x-nonce'] as string | undefined;
+  return { ...initialProps, nonce };
+};

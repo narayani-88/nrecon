@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Disable default security headers as we're handling them in middleware
+  headers: async () => [],
+  poweredByHeader: false,
+  reactStrictMode: true,
+  swcMinify: true,
   // Security headers are now handled in src/middleware.ts
 };
 
