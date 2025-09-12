@@ -3,6 +3,11 @@
 import { analyzeScanResults, AnalyzeScanResultsInput } from '@/ai/flows/risk-assessment-and-reporting';
 import { DnsRecord, FullScanResult, GeoIpData, PortScanResult, ScanData, WhoisData, Technology, ExposedService } from '@/lib/types';
 import { z } from 'zod';
+import { scanPorts } from '@/lib/port-scanner';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 const targetSchema = z.string().min(1, 'Target cannot be empty.');
 
@@ -23,10 +28,34 @@ const MOCK_TECHNOLOGIES: Technology[] = [
     { name: 'Node.js', category: 'Backend', version: '20.11.0' },
     { name: 'nginx', category: 'Web Server', version: '1.25.3' },
 ];
-const MOCK_EXPOSED_SERVICES: ExposedService[] = [
-    { port: 21, service: 'FTP', version: 'vsftpd 3.0.3', potentialCVE: 'CVE-2015-1419'},
-    { port: 3306, service: 'MySQL', version: '5.7.22', potentialCVE: 'CVE-2018-2780' }
-]
+// Function to check for common CVEs based on service and version
+async function checkForCVEs(service: string, version: string): Promise<string[]> {
+  // This is a simplified example. In a real app, you would query a CVE database
+  const cveMap: Record<string, Record<string, string[]>> = {
+    'nginx': {
+      '1.18.0': ['CVE-2021-23017', 'CVE-2020-12440'],
+      '1.16.0': ['CVE-2019-20372', 'CVE-2020-12440']
+    },
+    'openssl': {
+      '1.1.1f': ['CVE-2021-3449', 'CVE-2021-3450', 'CVE-2021-23840']
+    },
+    'mysql': {
+      '8.0.22': ['CVE-2021-21695', 'CVE-2021-21696', 'CVE-2021-21697']
+    },
+    'ssh': {
+      '8.2p1': ['CVE-2020-15778', 'CVE-2020-14145']
+    }
+  };
+
+  const serviceLower = service.toLowerCase();  
+  const serviceKey = Object.keys(cveMap).find(key => serviceLower.includes(key));
+  
+  if (serviceKey && cveMap[serviceKey][version]) {
+    return cveMap[serviceKey][version];
+  }
+  
+  return [];
+}
 
 const MOCK_GEO_IP: GeoIpData = {
   country: 'United States',
@@ -71,21 +100,30 @@ const simulateWhois = (target: string): WhoisData | null => {
    return MOCK_WHOIS;
 }
 
-const simulatePortScan = (): PortScanResult[] => {
-  return MOCK_PORTS_TO_SCAN.map(port => {
-    const isOpen = Math.random() > 0.6; // 40% chance of being open
-    if (isOpen) {
-      let service = 'unknown';
-      let banner = 'Generic Banner - Service ' + port;
-      if (port === 80) { service = 'http'; banner = 'nginx/1.18.0';}
-      if (port === 443) { service = 'https'; banner = 'OpenSSL/1.1.1f';}
-      if (port === 22) { service = 'ssh'; banner = 'OpenSSH_8.2p1 Ubuntu-4ubuntu0.1';}
-      if (port === 3306) { service = 'mysql'; banner = 'MySQL 8.0.22';}
-      return { port, protocol: 'tcp', status: 'open', service, banner };
+async function getExposedServices(openPorts: PortScanResult[]): Promise<ExposedService[]> {
+  const exposedServices: ExposedService[] = [];
+  
+  for (const port of openPorts) {
+    if (port.status === 'open' && port.service && port.banner) {
+      // Extract version from banner if possible
+      const versionMatch = port.banner.match(/(\d+(\.\d+)+)/);
+      const version = versionMatch ? versionMatch[0] : 'unknown';
+      
+      // Get CVEs for this service
+      const cves = await checkForCVEs(port.service, version);
+      
+      exposedServices.push({
+        port: port.port,
+        service: port.service,
+        version: version,
+        potentialCVE: cves.length > 0 ? cves[0] : undefined,
+        allCVEs: cves.length > 0 ? cves : undefined
+      });
     }
-    return { port, protocol: 'tcp', status: Math.random() > 0.2 ? 'closed' : 'filtered' };
-  });
-};
+  }
+  
+  return exposedServices;
+}
 
 export async function performScan(
   target: string
@@ -93,9 +131,10 @@ export async function performScan(
   try {
     const validatedTarget = targetSchema.parse(target);
 
-    // 1. Simulate data gathering
-    const isOnline = simulatePing();
-    const ports = simulatePortScan();
+    // 1. Perform actual scans
+    const isOnline = true; // Assume online for now
+    const ports = await scanPorts(validatedTarget);
+    const openPorts = ports.filter(p => p.status === 'open');
     
     // Always perform lookups on the original validated target
     const dns = simulateDnsLookup(validatedTarget);
@@ -115,9 +154,9 @@ export async function performScan(
       dns,
       whois,
       geoIp,
-      technologies: isOnline ? MOCK_TECHNOLOGIES : [],
+technologies: isOnline ? MOCK_TECHNOLOGIES : [],
       subdomains,
-      exposedServices: isOnline ? MOCK_EXPOSED_SERVICES : []
+      exposedServices: isOnline ? await getExposedServices(openPorts) : [],
     };
 
     // 2. Prepare data for AI analysis
@@ -152,7 +191,7 @@ export async function performScan(
         aiInput.scanResults.push({
             description: 'WHOIS information is public.',
             severity: 'Low',
-            details: { banner: `Registrar: ${whois.registrar}` }
+            details: { banner: `Registrar: ${scanData.whois.registrar || 'Unknown'}` }
         });
     }
 

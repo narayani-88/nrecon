@@ -39,7 +39,8 @@ export type ExposedService = {
     port: number;
     service: string;
     version: string;
-    potentialCVE: string | null;
+    potentialCVE?: string;
+    allCVEs?: string[];
 }
 
 export type ScanData = {

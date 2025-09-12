@@ -29,15 +29,18 @@ import {
   Network,
   Layers,
   Fingerprint,
+  Download,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import type { FullScanResult } from '@/lib/types';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
-import { Download, ExternalLink } from 'lucide-react';
 import { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { CveDetails } from './cve-details';
 
 type DashboardProps = {
   data: FullScanResult;
@@ -328,9 +331,14 @@ const Details = ({ data }: DashboardProps) => {
                                 <TableCell>{service.port}</TableCell>
                                 <TableCell>{service.service}</TableCell>
                                 <TableCell className="font-mono text-xs">{service.version}</TableCell>
-                                <TableCell className="font-mono text-xs hover:underline cursor-pointer" onClick={() => window.open(`https://www.cve.org/CVERecord?id=${service.potentialCVE}`, '_blank')}>
-                                    {service.potentialCVE}
-                                </TableCell>
+                                <TableCell>
+                                {service.potentialCVE && (
+                                  <CveDetails 
+                                    cveId={service.potentialCVE} 
+                                    allCves={service.allCVEs || []} 
+                                  />
+                                )}
+                              </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
