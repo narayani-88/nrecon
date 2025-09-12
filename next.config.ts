@@ -32,21 +32,20 @@ const nextConfig: NextConfig = {
   async headers() {
     const isDev = process.env.NODE_ENV === 'development';
     
-    // CSP configuration
+    // CSP configuration for production
     const cspDirectives = [
       // Default policy for all content
       "default-src 'self'",
       
-      // Script sources - use nonce-based CSP in production
-      isDev 
-        ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: http: ws:`
-        : `script-src 'self' 'strict-dynamic' 'nonce-${crypto.randomUUID().replace(/-/g, '')}' 'unsafe-inline' 'unsafe-eval' 'sha256-OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=' 'sha256-MhfV2lhOIeBFW0ba8fxMHjaAj9XZ2xXkVuc694GITJY=' 'sha256-4pL+hQyk9HRYyLisF8tLaMlv2BFQ55fD4JrMPLGuZ+A=' 'sha256-F3clgxA5UGWN0UV7hJt15sNFEBqyqjJBPukh83z7dLk=' 'sha256-Gv2JLci+JKBvladYw0G1ISgcxEf147AqxsgGZOvDlIw=' 'sha256-ASBv0wsDUAxjX0r+k4Ov7tHa2KOxYBjjgj+gxFvELZs=' 'sha256-Z1SXZPTtXDhccSkDyVwi4I+D2Mcp0ExWlbx9hASdKz8=' 'sha256-oY/645YNniIz2j02YqDv54lUER2HbHWJaYCXOjS1SOk=' https://nrecon.netlify.app`,
+      // Script sources - allow self, hashes, and nonce
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: http: https://nrecon.netlify.app`,
+      `script-src-elem 'self' 'unsafe-inline' https://nrecon.netlify.app`,
       
       // Style sources - allow 'unsafe-inline' for CSS-in-JS solutions
-      `style-src 'self' 'unsafe-inline' 'unsafe-hashes' https: http:`,
+      `style-src 'self' 'unsafe-inline' https: http:`,
       `style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://nrecon.netlify.app`,
       
-      // Font sources
+      // Font sources - allow self, data URIs, and Google Fonts
       `font-src 'self' data: blob: https://fonts.gstatic.com https://nrecon.netlify.app`,
       
       // Image sources
@@ -78,10 +77,15 @@ const nextConfig: NextConfig = {
         value: isDev 
           ? [
               "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: http: ws: wss:",
-              "connect-src 'self' https: http: ws: wss:",
-              "font-src 'self' data: blob: https: http:",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http: ws: wss:",
+              "script-src-elem 'self' 'unsafe-inline' https: http: ws: wss:",
+              "style-src 'self' 'unsafe-inline' https: http:",
+              "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://nrecon.netlify.app",
+              "font-src 'self' data: blob: https://fonts.gstatic.com https://nrecon.netlify.app",
               "img-src 'self' data: blob: https: http:",
               "media-src 'self' blob: data: https: http:",
+              "connect-src 'self' https: http: ws: wss:",
+              "frame-src 'self' https://nrecon.netlify.app",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
