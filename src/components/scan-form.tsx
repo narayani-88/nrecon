@@ -65,9 +65,10 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
                         placeholder="e.g., 127.0.0.1 or example.com"
                         {...field}
                         className="pl-10 h-11 text-base"
-                        aria-describedby="target-description"
-                        aria-required="true"
+                        aria-describedby="target-description target-required"
+                        required
                       />
+                      <p id="target-required" className="sr-only" aria-hidden="true">Required</p>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -82,11 +83,11 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
                    <FormControl>
                     <Checkbox 
                       id="consent-checkbox"
-                      name="consent"
                       checked={field.value} 
-                      onCheckedChange={field.onChange} 
-                      aria-describedby="consent-description"
-                      aria-required="true"
+                      onCheckedChange={field.onChange}
+                      aria-describedby="consent-description consent-required"
+                      className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                      required
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
@@ -96,7 +97,8 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
                     <FormDescription id="consent-description">
                       I confirm that I own or have explicit, written permission to perform security tests on the specified target. I understand that unauthorized scanning is illegal.
                     </FormDescription>
-                     <FormMessage />
+                    <p id="consent-required" className="sr-only" aria-hidden="true">Required</p>
+                    <FormMessage />
                   </div>
                 </FormItem>
               )}
