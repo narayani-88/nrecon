@@ -7,7 +7,7 @@
 [build.environment]
   NEXT_TELEMETRY_DISABLED = "1"
   NETLIFY_NEXT_PLUGIN_SKIP = "false"
-  NODE_VERSION = "16"  # Specify Node.js version
+  NODE_VERSION = "18"  # Next.js requires Node.js 18 or higher
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
