@@ -23,25 +23,25 @@ export function middleware(request: NextRequest) {
   // Define the CSP with nonce and required sources
   const csp = [
     // Base restrictions
-    `default-src 'self' https://nrecon.netlify.app;`,
+    `default-src 'self';`,
     
-    // Scripts - allow self, nonce, and Next.js required scripts
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https://nrecon.netlify.app;`,
-    `script-src-elem 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' https://nrecon.netlify.app;`,
+    // Scripts - use nonce and strict-dynamic
+    `script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self';`,
+    `script-src-elem 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' https: 'self';`,
     
     // Styles - allow self and inline styles
     `style-src 'self' 'unsafe-inline' https:;`,
-    `style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://nrecon.netlify.app;`,
+    `style-src-elem 'self' 'unsafe-inline' https:;`,
     
     // Fonts and images
-    `font-src 'self' data: https://fonts.gstatic.com;`,
+    `font-src 'self' data: https:;`,
     `img-src 'self' data: blob: https:;`,
     
     // Connections
     `connect-src 'self' https: http: wss:;`,
     
     // Other
-    `frame-src 'self';`,
+    `frame-src 'self' https:;`,
     `media-src 'self' blob: data: https:;`,
     `object-src 'none';`,
     `base-uri 'self';`,
