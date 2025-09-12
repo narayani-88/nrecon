@@ -61,7 +61,7 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
                       <Input
                         id="target-input"
                         type="text"
-                        autoComplete="off"
+                        autoComplete="on"
                         placeholder="e.g., 127.0.0.1 or example.com"
                         {...field}
                         className="pl-10 h-11 text-base"
