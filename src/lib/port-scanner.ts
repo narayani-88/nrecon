@@ -1,35 +1,67 @@
-import { NmapScan, NmapScanStatus } from 'node-nmap';
 import { PortScanResult } from '@/lib/types';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
-export async function scanPorts(target: string, ports: string = '1-1024'): Promise<PortScanResult[]> {
+const execAsync = promisify(exec);
+
+// Common ports to scan
+const COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 389, 443, 445, 993, 995, 1433, 1521, 2049, 3306, 3389, 5432, 5900, 5985, 5986, 6379, 7001, 8000, 8009, 8080, 8081, 8443, 9000, 9090, 9200, 11211, 27017];
+
+/**
+ * Scans common ports on the specified IP address using nmap
+ * @param ip The IP address to scan
+ * @returns Promise with array of port scan results
+ */
+export async function scanPorts(ip: string): Promise<PortScanResult[]> {
   try {
-    // For development, we'll use a mock implementation
-    // In production, you would use the actual nmap implementation
-    // const nmap = new NmapScan();
-    // const results = await nmap.scan({
-    //   target,
-    //   ports,
-    //   arguments: '-sV -T4' // Version detection, aggressive timing
-    // });
+    // Check if nmap is installed
+    try {
+      await execAsync('nmap --version');
+    } catch (e) {
+      console.error('nmap is not installed. Please install nmap to use this feature.');
+      throw new Error('nmap is required for port scanning. Please install it and try again.');
+    }
 
-    // Mock implementation for development
-    const mockResults: PortScanResult[] = [
-      { port: 80, protocol: 'tcp', status: 'open', service: 'http', banner: 'nginx/1.18.0' },
-      { port: 443, protocol: 'tcp', status: 'open', service: 'https', banner: 'OpenSSL/1.1.1f' },
-      { port: 22, protocol: 'tcp', status: 'open', service: 'ssh', banner: 'OpenSSH_8.2p1 Ubuntu-4ubuntu0.1' },
-      { port: 3306, protocol: 'tcp', status: 'open', service: 'mysql', banner: 'MySQL 8.0.22' },
-    ];
-
-    // Add some random closed/filtered ports
-    const commonPorts = [21, 23, 25, 53, 110, 135, 139, 143, 445, 3389, 5432, 8080, 8443];
-    commonPorts.forEach(port => {
-      if (!mockResults.some(p => p.port === port)) {
-        const status = Math.random() > 0.5 ? 'closed' : 'filtered';
-        mockResults.push({ port, protocol: 'tcp', status } as PortScanResult);
+    // Build the nmap command
+    const ports = COMMON_PORTS.join(',');
+    const command = `nmap -Pn -p ${ports} --open -sV --version-intensity 5 -T4 ${ip}`;
+    
+    console.log(`[DEBUG] Running nmap: ${command}`);
+    const { stdout, stderr } = await execAsync(command);
+    
+    if (stderr) {
+      console.error('nmap stderr:', stderr);
+    }
+    
+    // Parse nmap output
+    const results: PortScanResult[] = [];
+    const lines = stdout.split('\n');
+    
+    for (const line of lines) {
+      // Match port lines like: 80/tcp open  http    nginx 1.18.0 (Ubuntu)
+      const portMatch = line.match(/^(\d+)\/(tcp|udp)\s+(\w+)\s+(\S+)(?:\s+(.+))?/);
+      
+      if (portMatch) {
+        const portStr = portMatch[1];
+        const protocol = portMatch[2] as 'tcp' | 'udp';
+        const status = portMatch[3];
+        const service = portMatch[4];
+        const banner = portMatch[5] || '';
+        
+        // Only include open ports
+        if (status.toLowerCase() === 'open') {
+          results.push({
+            port: parseInt(portStr, 10),
+            protocol,
+            status: 'open',
+            service: service.toLowerCase(),
+            banner: banner.trim()
+          });
+        }
       }
-    });
-
-    return mockResults.sort((a, b) => a.port - b.port);
+    }
+    
+    return results;
   } catch (error) {
     console.error('Port scan failed:', error);
     throw new Error('Failed to perform port scan');

@@ -29,9 +29,24 @@ export type PortScanResult = {
   banner?: string;
 };
 
+export type TechnologyCategory = 
+  | 'Frontend' 
+  | 'Backend' 
+  | 'Web Server' 
+  | 'Database' 
+  | 'CMS' 
+  | 'Library' 
+  | 'Protocol' 
+  | 'Security'
+  | 'Repository'
+  | 'CI/CD'
+  | 'Monitoring'
+  | 'Search'
+  | 'Cache';
+
 export type Technology = {
     name: string;
-    category: 'Frontend' | 'Backend' | 'Web Server' | 'Database' | 'CMS' | 'Library';
+    category: TechnologyCategory;
     version: string | null;
 }
 
@@ -41,6 +56,7 @@ export type ExposedService = {
     version: string;
     potentialCVE?: string;
     allCVEs?: string[];
+    banner?: string;
 }
 
 export type ScanData = {
