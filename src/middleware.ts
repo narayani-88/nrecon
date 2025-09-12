@@ -1,63 +1,51 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// CSP Report endpoint to collect violation reports
+const reportUri = '/api/csp-violation';
+
 export function middleware(request: NextRequest) {
-  // Clone the response to modify headers
   const response = NextResponse.next();
   
-  // Only set CSP in production
-  if (process.env.NODE_ENV === 'production') {
-    const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
-    
-    // Set CSP header
-    const csp = [
-      "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://nrecon.netlify.app`,
-      "script-src-elem 'self' 'unsafe-inline' https://nrecon.netlify.app",
-      "style-src 'self' 'unsafe-inline'",
-      "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://nrecon.netlify.app",
-      "font-src 'self' data: https://fonts.gstatic.com https://nrecon.netlify.app",
-      "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://nrecon.netlify.app",
-      "frame-src 'self' https://nrecon.netlify.app",
-      "media-src 'self' blob: data: https:",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-      "upgrade-insecure-requests"
-    ].join('; ');
-
-    // Set security headers
-    response.headers.set('Content-Security-Policy', csp);
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-    response.headers.set('X-XSS-Protection', '1; mode=block');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-    response.headers.set('X-DNS-Prefetch-Control', 'on');
-    response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  // Skip API routes and static files
+  if (request.nextUrl.pathname.startsWith('/api') || 
+      request.nextUrl.pathname.startsWith('/_next') ||
+      request.nextUrl.pathname.includes('.')) {
+    return response;
   }
+
+  // Very permissive CSP for debugging - this will be logged to the console
+  const csp = [
+    "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;",
+    "script-src * 'unsafe-inline' 'unsafe-eval' data: blob:;",
+    "style-src * 'unsafe-inline' data:;",
+    "img-src * data: blob: 'unsafe-inline';",
+    "connect-src * 'unsafe-inline';",
+    "font-src * data:;",
+    `report-uri ${reportUri}`,
+    "report-to default"
+  ].join(' ');
+
+  // Set security headers
+  response.headers.set('Content-Security-Policy-Report-Only', csp);
+  response.headers.set('Report-To', JSON.stringify({
+    group: 'default',
+    max_age: 10886400,
+    endpoints: [{ url: reportUri }],
+    include_subdomains: true
+  }));
+
+  // Log CSP headers for debugging
+  console.log('CSP Header Set:', csp);
 
   return response;
 }
 
-// Apply middleware to all routes
+// Match all routes except API routes and static files
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     {
-      source: '/((?!api|_next/static|_next/image|favicon.ico).*)',
-      missing: [
-        { type: 'header', key: 'next-router-prefetch' },
-        { type: 'header', key: 'purpose', value: 'prefetch' },
-      ],
+      source: '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:ico|svg|png|jpg|jpeg|gif|webp|css|js|woff2?|ttf|eot|map|json)$).*)',
     },
   ],
 };
