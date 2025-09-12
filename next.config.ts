@@ -34,16 +34,35 @@ const nextConfig: NextConfig = {
     
     // CSP configuration
     const cspDirectives = [
+      // Default policy for all content
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : "'strict-dynamic'"}`,  // Only allow 'unsafe-eval' in development
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' data: https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https:",
-      `connect-src 'self' https: ${isDev ? 'ws:' : ''}`,  // Allow WebSocket in development
-      "frame-src 'self'",
-      "media-src 'self'",
+      
+      // Script sources
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: http: ${isDev ? 'ws:' : ''}`,
+      
+      // Style sources
+      "style-src 'self' 'unsafe-inline' https: http: 'unsafe-hashes'",
+      "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://nrecon.netlify.app",
+      
+      // Font sources
+      "font-src 'self' data: https://fonts.gstatic.com https://nrecon.netlify.app",
+      
+      // Image sources
+      "img-src 'self' data: blob: https: http:",
+      
+      // Connect sources
+      `connect-src 'self' https: http: ${isDev ? 'ws:' : ''} https://nrecon.netlify.app`,
+      
+      // Frame sources
+      "frame-src 'self' https://nrecon.netlify.app",
+      
+      // Media sources
+      "media-src 'self' blob: data: https: http:",
+      
+      // Object sources
       "object-src 'none'",
+      
+      // Other directives
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
@@ -61,7 +80,7 @@ const nextConfig: NextConfig = {
       },
       {
         key: 'X-Frame-Options',
-        value: 'DENY',
+        value: 'SAMEORIGIN',
       },
       {
         key: 'X-XSS-Protection',
@@ -76,8 +95,12 @@ const nextConfig: NextConfig = {
         value: 'camera=(), microphone=(), geolocation=()',
       },
       {
-        key: 'X-Content-Type-Options',
-        value: 'nosniff',
+        key: 'X-DNS-Prefetch-Control',
+        value: 'on',
+      },
+      {
+        key: 'Strict-Transport-Security',
+        value: 'max-age=63072000; includeSubDomains; preload',
       },
     ];
 
