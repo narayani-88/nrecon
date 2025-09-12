@@ -275,7 +275,7 @@ const Details = ({ data }: DashboardProps) => {
             <CardHeader>
                 <CardTitle>Technology Stack</CardTitle>
                 <CardDescription>Technologies detected on {data.scanData.target}.</CardDescription>
-            </Header>
+            </CardHeader>
             <CardContent>
                  <div className="border rounded-lg overflow-x-auto">
                  <Table>
@@ -305,7 +305,7 @@ const Details = ({ data }: DashboardProps) => {
             <CardHeader>
                 <CardTitle>Exposed Services</CardTitle>
                 <CardDescription>Potentially vulnerable services discovered on the network.</CardDescription>
-            </Header>
+            </CardHeader>
             <CardContent>
                  <div className="border rounded-lg overflow-x-auto">
                  <Table>
