@@ -37,15 +37,15 @@ const nextConfig: NextConfig = {
       // Default policy for all content
       "default-src 'self'",
       
-      // Script sources
-      `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: http: ${isDev ? 'ws:' : ''}`,
+      // Script sources - allow all required hashes for Next.js
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' 'sha256-OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=' 'sha256-MhfV2lhOIeBFW0ba8fxMHjaAj9XZ2xXkVuc694GITJY=' 'sha256-4pL+hQyk9HRYyLisF8tLaMlv2BFQ55fD4JrMPLGuZ+A=' 'sha256-F3clgxA5UGWN0UV7hJt15sNFEBqyqjJBPukh83z7dLk=' 'sha256-Gv2JLci+JKBvladYw0G1ISgcxEf147AqxsgGZOvDlIw=' 'sha256-ASBv0wsDUAxjX0r+k4Ov7tHa2KOxYBjjgj+gxFvELZs=' 'sha256-Z1SXZPTtXDhccSkDyVwi4I+D2Mcp0ExWlbx9hASdKz8=' 'sha256-oY/645YNniIz2j02YqDv54lUER2HbHWJaYCXOjS1SOk=' https: http: ${isDev ? 'ws:' : ''}`,
       
       // Style sources
-      "style-src 'self' 'unsafe-inline' https: http: 'unsafe-hashes'",
+      "style-src 'self' 'unsafe-inline' 'unsafe-hashes' https: http:",
       "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://nrecon.netlify.app",
       
-      // Font sources
-      "font-src 'self' data: https://fonts.gstatic.com https://nrecon.netlify.app",
+      // Font sources - allow self and data URIs for fonts
+      "font-src 'self' data: blob: https://fonts.gstatic.com https://nrecon.netlify.app",
       
       // Image sources
       "img-src 'self' data: blob: https: http:",

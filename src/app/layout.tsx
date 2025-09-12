@@ -4,12 +4,13 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
-// Preload the font for better performance
+// Configure the Inter font with Next.js font optimization
 const inter = Inter({ 
-  subsets: ['latin'], 
+  subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
   preload: true,
+  fallback: ['system-ui', 'Arial', 'sans-serif'],
 });
 
 export const metadata: Metadata = {
@@ -42,13 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link
-          rel="preload"
-          href="/fonts/inter-var-latin.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
+        {/* Next.js automatically handles font preloading when using next/font */}
         <link
           rel="preconnect"
           href="https://fonts.googleapis.com"
@@ -60,7 +55,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className={cn('font-body antialiased', inter.variable)}>
+      <body className={cn('font-sans antialiased', inter.variable)}>
         {children}
         <Toaster />
       </body>
