@@ -14,24 +14,31 @@ const COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 389, 443,
  */
 export async function scanPorts(ip: string): Promise<PortScanResult[]> {
   try {
-    // Check if nmap is installed
+    console.log('[PORT SCANNER] Starting port scan for IP:', ip);
+    
+    // Check if nmap is installed and accessible
     try {
-      await execAsync('nmap --version');
+      const { stdout: versionOutput } = await execAsync('nmap --version');
+      console.log('[PORT SCANNER] Nmap version:', versionOutput.split('\n')[0]);
     } catch (e) {
-      console.error('nmap is not installed. Please install nmap to use this feature.');
-      throw new Error('nmap is required for port scanning. Please install it and try again.');
+      const errorMsg = 'nmap is not installed or not in PATH. Please install nmap and ensure it is in your system PATH.';
+      console.error('[PORT SCANNER]', errorMsg);
+      throw new Error(errorMsg);
     }
 
-    // Build the nmap command
+    // Build the nmap command with full path to nmap
     const ports = COMMON_PORTS.join(',');
-    const command = `nmap -Pn -p ${ports} --open -sV --version-intensity 5 -T4 ${ip}`;
+    const nmapPath = 'C:\\Program Files (x86)\\Nmap\\nmap.exe';
+    const command = `"${nmapPath}" -Pn -p ${ports} --open -sV --version-intensity 5 -T4 ${ip}`;
     
-    console.log(`[DEBUG] Running nmap: ${command}`);
+    console.log(`[PORT SCANNER] Running nmap command: ${command}`);
     const { stdout, stderr } = await execAsync(command);
     
     if (stderr) {
-      console.error('nmap stderr:', stderr);
+      console.warn('[PORT SCANNER] nmap stderr:', stderr);
     }
+    
+    console.log('[PORT SCANNER] nmap stdout:', stdout);
     
     // Parse nmap output
     const results: PortScanResult[] = [];
