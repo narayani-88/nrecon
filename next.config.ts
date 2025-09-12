@@ -1,12 +1,17 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // TypeScript configuration
   typescript: {
     ignoreBuildErrors: true,
   },
+  
+  // ESLint configuration
   eslint: {
     ignoreDuringBuilds: true,
   },
+  
+  // Image optimization
   images: {
     remotePatterns: [
       {
@@ -29,12 +34,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Disable default security headers as we're handling them in middleware
+  
+  // Security headers are handled in src/middleware.ts
   headers: async () => [],
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
-  // Security headers are now handled in src/middleware.ts
+  
+  // Performance optimizations
+  compress: true,
 };
 
 export default nextConfig;
