@@ -25,11 +25,11 @@ export function middleware(request: NextRequest) {
     // Base restrictions
     `default-src 'self' https://nrecon.netlify.app;`,
     
-    // Scripts - use nonce and strict-dynamic with required sources
-    `script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' 'self' https://nrecon.netlify.app https://*.netlify.app https://*.vercel-insights.com https://vercel.live;`,
-    `script-src-elem 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'self' https://nrecon.netlify.app https://*.netlify.app;`,
+    // Scripts - more permissive for development
+    `script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' 'self' https:;`,
+    `script-src-elem 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'self' https:;`,
     
-    // Styles - allow self and inline styles
+    // Styles - allow all for development
     `style-src 'self' 'unsafe-inline' https:;`,
     `style-src-elem 'self' 'unsafe-inline' https:;`,
     
@@ -49,7 +49,8 @@ export function middleware(request: NextRequest) {
     `base-uri 'self';`,
     `form-action 'self';`,
     `frame-ancestors 'none';`,
-    `upgrade-insecure-requests;`
+    // Temporarily removed upgrade-insecure-requests for local development
+    // `upgrade-insecure-requests;`
   ].join(' ');
 
   // Set security headers
