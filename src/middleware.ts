@@ -23,11 +23,11 @@ export function middleware(request: NextRequest) {
   // Define the CSP with nonce and required sources
   const csp = [
     // Base restrictions
-    `default-src 'self';`,
+    `default-src 'self' https://nrecon.netlify.app;`,
     
-    // Scripts - use nonce and strict-dynamic
-    `script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self';`,
-    `script-src-elem 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' https: 'self';`,
+    // Scripts - use nonce and strict-dynamic with required sources
+    `script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' 'self' https://nrecon.netlify.app https://*.netlify.app https://*.vercel-insights.com https://vercel.live;`,
+    `script-src-elem 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'self' https://nrecon.netlify.app https://*.netlify.app;`,
     
     // Styles - allow self and inline styles
     `style-src 'self' 'unsafe-inline' https:;`,
@@ -38,11 +38,13 @@ export function middleware(request: NextRequest) {
     `img-src 'self' data: blob: https:;`,
     
     // Connections
-    `connect-src 'self' https: http: wss:;`,
+    `connect-src 'self' https: wss:;`,
     
     // Other
     `frame-src 'self' https:;`,
     `media-src 'self' blob: data: https:;`,
+    `worker-src 'self' blob:;`,
+    `child-src 'self' blob:;`,
     `object-src 'none';`,
     `base-uri 'self';`,
     `form-action 'self';`,
