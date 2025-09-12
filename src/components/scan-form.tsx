@@ -54,14 +54,16 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
               name="target"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Target</FormLabel>
+                  <FormLabel htmlFor="target-input">Target</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
+                        id="target-input"
                         placeholder="e.g., 127.0.0.1 or example.com"
                         {...field}
                         className="pl-10 h-11 text-base"
+                        aria-describedby="target-description"
                       />
                     </div>
                   </FormControl>
@@ -75,13 +77,18 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-accent/50">
                    <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    <Checkbox 
+                      id="consent-checkbox"
+                      checked={field.value} 
+                      onCheckedChange={field.onChange} 
+                      aria-describedby="consent-description"
+                    />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>
-                     Ethical Hacking Agreement
+                    <FormLabel htmlFor="consent-checkbox" className="cursor-pointer">
+                      Ethical Hacking Agreement
                     </FormLabel>
-                    <FormDescription>
+                    <FormDescription id="consent-description">
                       I confirm that I own or have explicit, written permission to perform security tests on the specified target. I understand that unauthorized scanning is illegal.
                     </FormDescription>
                      <FormMessage />
