@@ -27,6 +27,9 @@ export type PortScanResult = {
   status: 'open' | 'closed' | 'filtered';
   service?: string;
   banner?: string;
+  version?: string;
+  state?: string;
+  isMock?: boolean;
 };
 
 export type TechnologyCategory = 
