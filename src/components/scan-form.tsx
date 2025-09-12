@@ -60,10 +60,13 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
                       <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="target-input"
+                        type="text"
+                        autoComplete="off"
                         placeholder="e.g., 127.0.0.1 or example.com"
                         {...field}
                         className="pl-10 h-11 text-base"
                         aria-describedby="target-description"
+                        aria-required="true"
                       />
                     </div>
                   </FormControl>
@@ -79,9 +82,11 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
                    <FormControl>
                     <Checkbox 
                       id="consent-checkbox"
+                      name="consent"
                       checked={field.value} 
                       onCheckedChange={field.onChange} 
                       aria-describedby="consent-description"
+                      aria-required="true"
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
