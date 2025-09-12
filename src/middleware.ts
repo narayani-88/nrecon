@@ -14,46 +14,26 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // Strict CSP for Next.js with required directives
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  // Very permissive CSP for debugging - will be locked down after testing
   const csp = [
-    // Base restrictions
-    "default-src 'self';",
-    
-    // Scripts
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: http:;`,
-    `script-src-elem 'self' 'unsafe-inline' https://nrecon.netlify.app;`,
-    
-    // Styles
-    "style-src 'self' 'unsafe-inline' https:;",
-    "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://nrecon.netlify.app;",
-    
-    // Fonts and images
-    "font-src 'self' data: https://fonts.gstatic.com;",
-    "img-src 'self' data: blob: https:;",
-    
-    // Connections
-    "connect-src 'self' https: http: wss:;",
-    
-    // Other
-    "frame-src 'self';",
-    "media-src 'self' blob: data: https:;",
-    "object-src 'none';",
-    "base-uri 'self';",
-    "form-action 'self';",
-    "frame-ancestors 'none';",
-    "upgrade-insecure-requests;"
+    "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;",
+    "script-src * 'unsafe-inline' 'unsafe-eval' data: blob:;",
+    "script-src-elem * 'unsafe-inline' 'unsafe-eval' data: blob:;",
+    "style-src * 'unsafe-inline' data: blob:;",
+    "style-src-elem * 'unsafe-inline' data: blob:;",
+    "img-src * data: blob:;",
+    "font-src * data: blob:;",
+    "connect-src * 'unsafe-inline' data: blob:;",
+    "frame-src *;",
+    "media-src * data: blob:;",
+    "object-src *;",
+    "base-uri *;",
+    "form-action *;",
+    "frame-ancestors *;"
   ].join(' ');
 
-  // Set security headers
-  response.headers.set('Content-Security-Policy', csp);
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  response.headers.set('X-DNS-Prefetch-Control', 'on');
-  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  // Set security headers in report-only mode to see what would be blocked
+  response.headers.set('Content-Security-Policy-Report-Only', csp);
   response.headers.set('Report-To', JSON.stringify({
     group: 'default',
     max_age: 10886400,
