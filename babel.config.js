@@ -9,7 +9,6 @@ module.exports = (api) => {
         {
           'preset-react': {
             runtime: 'automatic',
-            importSource: '@emotion/react',
           },
         },
       ],
