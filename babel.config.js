@@ -27,7 +27,8 @@ module.exports = (api) => {
     // Only process handlebars with specific loader
     overrides: [
       {
-        test: /[\\/]node_modules[\\/]handlebars[\\/]/,
+        // Use a safe function so Babel doesn't error when no filename is provided
+        test: (filename) => Boolean(filename && /[\\/]node_modules[\\/]handlebars[\\/]/.test(filename)),
         presets: ['@babel/preset-env'],
       },
     ],

@@ -1,6 +1,5 @@
 [build]
   command = "npm run build"
-  publish = ".next"
   functions = ".netlify/functions"
   image = "ubuntu-20.04"  # Use Ubuntu 20.04 which has Nmap available in the package manager
 
@@ -15,13 +14,6 @@
 [dev]
   command = "npm run dev"
   port = 3000
-  publish = ".next"
   targetPort = 3000
 
 # Security headers are now managed in src/middleware.ts
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = true
