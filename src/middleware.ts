@@ -21,36 +21,39 @@ export function middleware(request: NextRequest) {
   response.headers.set('x-nonce', nonce);
   
   // Define the CSP with nonce and required sources
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  // More permissive CSP for development
   const csp = [
     // Base restrictions
-    `default-src 'self' https://nrecon.netlify.app;`,
+    `default-src 'self' ${isDevelopment ? '*' : 'https://nrecon.netlify.app'}`,
     
-    // Scripts - more permissive for development
-    `script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' 'self' https:;`,
-    `script-src-elem 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'self' https:;`,
+    // Scripts - very permissive for development
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http: ${isDevelopment ? '*' : ''}`,
+    `script-src-elem 'self' 'unsafe-inline' https: http: ${isDevelopment ? '*' : ''}`,
     
     // Styles - allow all for development
-    `style-src 'self' 'unsafe-inline' https:;`,
-    `style-src-elem 'self' 'unsafe-inline' https:;`,
+    `style-src 'self' 'unsafe-inline' https: http: ${isDevelopment ? '*' : ''}`,
+    `style-src-elem 'self' 'unsafe-inline' https: http: ${isDevelopment ? '*' : ''}`,
     
     // Fonts and images
-    `font-src 'self' data: https:;`,
-    `img-src 'self' data: blob: https:;`,
+    `font-src 'self' data: https: http: ${isDevelopment ? '*' : ''}`,
+    `img-src 'self' data: blob: https: http: ${isDevelopment ? '*' : ''}`,
     
     // Connections
-    `connect-src 'self' https: wss:;`,
+    `connect-src 'self' https: wss: http: ${isDevelopment ? '*' : ''}`,
     
     // Other
-    `frame-src 'self' https:;`,
-    `media-src 'self' blob: data: https:;`,
-    `worker-src 'self' blob:;`,
-    `child-src 'self' blob:;`,
-    `object-src 'none';`,
-    `base-uri 'self';`,
-    `form-action 'self';`,
-    `frame-ancestors 'none';`,
+    `frame-src 'self' https: http: ${isDevelopment ? '*' : ''}`,
+    `media-src 'self' blob: data: https: http: ${isDevelopment ? '*' : ''}`,
+    `worker-src 'self' blob: ${isDevelopment ? '*' : ''}`,
+    `child-src 'self' blob: ${isDevelopment ? '*' : ''}`,
+    `object-src '${isDevelopment ? 'self' : 'none'}'`,
+    `base-uri 'self'`,
+    `form-action 'self'`,
+    `frame-ancestors 'none'`,
     // Temporarily removed upgrade-insecure-requests for local development
-    // `upgrade-insecure-requests;`
+    // `upgrade-insecure-requests`
   ].join(' ');
 
   // Set security headers
