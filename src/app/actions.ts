@@ -457,8 +457,24 @@ export async function performScan(
     }
 
 
-    // 3. Call GenAI Flow
-    const aiAnalysis = await analyzeScanResults(aiInput);
+    // 3. Call AI Analysis with fallback
+    let aiAnalysis;
+    try {
+      aiAnalysis = await analyzeScanResults(aiInput);
+    } catch (aiError) {
+      console.error('AI Analysis failed, using fallback:', aiError);
+      // Fallback AI analysis if the service fails
+      aiAnalysis = {
+        riskAssessments: [
+          {
+            finding: 'Scan completed successfully',
+            riskLevel: 'Low' as const,
+            remediation: 'Review the scan results manually for any security concerns.'
+          }
+        ],
+        summary: 'AI analysis is temporarily unavailable. Please review the scan results manually.'
+      };
+    }
 
     const fullResult: FullScanResult = {
       id: `${validatedTarget}-${Date.now()}`,

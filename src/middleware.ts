@@ -26,11 +26,11 @@ export function middleware(request: NextRequest) {
   // More permissive CSP for development
   const csp = [
     // Base restrictions
-    `default-src 'self' ${isDevelopment ? '*' : 'https://nrecon.netlify.app'}`,
+    `default-src 'self' ${isDevelopment ? '*' : 'https://nrecon.netlify.app https://*.netlify.app'}`,
     
-    // Scripts - very permissive for development
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http: ${isDevelopment ? '*' : ''}`,
-    `script-src-elem 'self' 'unsafe-inline' https: http: ${isDevelopment ? '*' : ''}`,
+    // Scripts - very permissive for development, allow unsafe-eval for production too
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http: ${isDevelopment ? '*' : 'https://*.netlify.app https://nrecon.netlify.app'}`,
+    `script-src-elem 'self' 'unsafe-inline' https: http: ${isDevelopment ? '*' : 'https://*.netlify.app https://nrecon.netlify.app'}`,
     
     // Styles - allow all for development
     `style-src 'self' 'unsafe-inline' https: http: ${isDevelopment ? '*' : ''}`,
@@ -41,7 +41,7 @@ export function middleware(request: NextRequest) {
     `img-src 'self' data: blob: https: http: ${isDevelopment ? '*' : ''}`,
     
     // Connections
-    `connect-src 'self' https: wss: http: ${isDevelopment ? '*' : ''}`,
+    `connect-src 'self' https: wss: http: ${isDevelopment ? '*' : 'https://*.googleapis.com https://generativelanguage.googleapis.com https://*.netlify.app https://nrecon.netlify.app'}`,
     
     // Other
     `frame-src 'self' https: http: ${isDevelopment ? '*' : ''}`,
