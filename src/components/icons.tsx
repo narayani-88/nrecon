@@ -1,6 +1,29 @@
 import * as React from 'react';
+import Image from 'next/image';
 
-export function Logo(props: React.SVGProps<SVGSVGElement>) {
+interface LogoProps {
+  className?: string;
+  width?: number;
+  height?: number;
+}
+
+export function Logo({ className = "h-8 w-8", width = 32, height = 32 }: LogoProps) {
+  return (
+    <div className={className}>
+      <Image
+        src="/favicon-96x96.png"
+        alt="Nrecon Logo"
+        width={width}
+        height={height}
+        className="w-full h-full object-contain"
+        priority
+      />
+    </div>
+  );
+}
+
+// Keep the old SVG version as fallback if needed
+export function LogoSVG(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

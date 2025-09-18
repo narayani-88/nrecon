@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ShieldCheck, Target } from 'lucide-react';
+import { Logo } from '@/components/icons';
 
 const formSchema = z.object({
   target: z.string().min(1, 'Target IP or hostname is required.'),
@@ -42,7 +43,10 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
 
   return (
     <Card className="w-full shadow-lg">
-      <CardHeader>
+      <CardHeader className="text-center">
+        <div className="flex justify-center mb-4">
+          <Logo className="h-16 w-16" width={64} height={64} />
+        </div>
         <CardTitle className="text-2xl">New Scan</CardTitle>
         <CardDescription>Enter a target IP address or hostname to begin scanning.</CardDescription>
       </CardHeader>
