@@ -130,9 +130,10 @@ async function checkForCVEs(service: string, version: string, banner?: string): 
  */
 async function getGeoIp(ip: string): Promise<GeoIpData | null> {
   try {
-    // In a production app, you would use a GeoIP service like MaxMind, IP-API, or ipinfo.io
-    // This is a simplified implementation that returns basic data
-    if (ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+    console.log(`Looking up GeoIP for: ${ip}`);
+    
+    // Handle local/private IPs
+    if (ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
       return {
         country: 'Local Network',
         region: 'Private',
@@ -142,10 +143,73 @@ async function getGeoIp(ip: string): Promise<GeoIpData | null> {
       };
     }
     
-    // For demonstration purposes, return a default location
+    // Try multiple GeoIP APIs for better reliability
+    const apis = [
+      {
+        url: `http://ip-api.com/json/${ip}?fields=status,country,regionName,city,lat,lon`,
+        parser: (data: any) => ({
+          country: data.country || 'Unknown',
+          region: data.regionName || 'Unknown', 
+          city: data.city || 'Unknown',
+          lat: data.lat || 0,
+          lon: data.lon || 0
+        })
+      },
+      {
+        url: `https://ipapi.co/${ip}/json/`,
+        parser: (data: any) => ({
+          country: data.country_name || 'Unknown',
+          region: data.region || 'Unknown',
+          city: data.city || 'Unknown', 
+          lat: data.latitude || 0,
+          lon: data.longitude || 0
+        })
+      },
+      {
+        url: `https://ipinfo.io/${ip}/json`,
+        parser: (data: any) => {
+          const [lat, lon] = (data.loc || '0,0').split(',').map(Number);
+          return {
+            country: data.country || 'Unknown',
+            region: data.region || 'Unknown',
+            city: data.city || 'Unknown',
+            lat: lat || 0,
+            lon: lon || 0
+          };
+        }
+      }
+    ];
+    
+    for (const api of apis) {
+      try {
+        console.log(`Trying GeoIP API: ${api.url}`);
+        const response = await fetch(api.url, {
+          headers: {
+            'User-Agent': 'Nrecon-Scanner/1.0'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`GeoIP API response:`, data);
+          
+          if (data && (data.status !== 'fail' || !data.status)) {
+            const result = api.parser(data);
+            console.log(`GeoIP result:`, result);
+            return result;
+          }
+        }
+      } catch (apiError) {
+        console.error(`GeoIP API ${api.url} failed:`, apiError);
+        continue;
+      }
+    }
+    
+    // If all APIs fail, return unknown location
+    console.warn('All GeoIP APIs failed, returning unknown location');
     return {
       country: 'Unknown',
-      region: 'Unknown',
+      region: 'Unknown', 
       city: 'Unknown',
       lat: 0,
       lon: 0
@@ -162,92 +226,140 @@ async function getGeoIp(ip: string): Promise<GeoIpData | null> {
  * @param port The port number to check
  * @returns Array of detected technologies
  */
-async function detectTechnologies(ip: string, port: number): Promise<Technology[]> {
+async function detectTechnologies(ip: string, port: number, banner?: string): Promise<Technology[]> {
   const technologies: Technology[] = [];
   
-  // Common technology mappings by port
+  console.log(`Detecting technologies for port ${port} with banner: ${banner}`);
+  
+  // Analyze banner first for accurate detection
+  if (banner) {
+    const bannerLower = banner.toLowerCase();
+    
+    // Web servers
+    if (bannerLower.includes('nginx')) {
+      const version = banner.match(/nginx\/(\d+\.\d+\.\d+)/i)?.[1] || null;
+      technologies.push({ name: 'Nginx', category: 'Web Server', version });
+      technologies.push({ name: 'HTTP', category: 'Protocol', version: '1.1' });
+    } else if (bannerLower.includes('apache')) {
+      const version = banner.match(/apache\/(\d+\.\d+\.\d+)/i)?.[1] || null;
+      technologies.push({ name: 'Apache HTTP Server', category: 'Web Server', version });
+      technologies.push({ name: 'HTTP', category: 'Protocol', version: '1.1' });
+    } else if (bannerLower.includes('iis')) {
+      const version = banner.match(/iis\/(\d+\.\d+)/i)?.[1] || null;
+      technologies.push({ name: 'Microsoft IIS', category: 'Web Server', version });
+      technologies.push({ name: 'HTTP', category: 'Protocol', version: '1.1' });
+    }
+    
+    // SSH
+    if (bannerLower.includes('openssh')) {
+      const version = banner.match(/openssh[_\s](\d+\.\d+p?\d*)/i)?.[1] || null;
+      technologies.push({ name: 'OpenSSH', category: 'Protocol', version });
+    }
+    
+    // Databases
+    if (bannerLower.includes('mysql')) {
+      const version = banner.match(/(\d+\.\d+\.\d+)/)?.[1] || null;
+      technologies.push({ name: 'MySQL', category: 'Database', version });
+    } else if (bannerLower.includes('postgresql') || bannerLower.includes('postgres')) {
+      const version = banner.match(/(\d+\.\d+)/)?.[1] || null;
+      technologies.push({ name: 'PostgreSQL', category: 'Database', version });
+    } else if (bannerLower.includes('mongodb')) {
+      const version = banner.match(/(\d+\.\d+\.\d+)/)?.[1] || null;
+      technologies.push({ name: 'MongoDB', category: 'Database', version });
+    }
+    
+    // Operating Systems
+    if (bannerLower.includes('ubuntu')) {
+      const version = banner.match(/ubuntu[^\d]*(\d+\.\d+)/i)?.[1] || null;
+      technologies.push({ name: 'Ubuntu', category: 'Backend', version });
+    } else if (bannerLower.includes('centos')) {
+      const version = banner.match(/centos[^\d]*(\d+)/i)?.[1] || null;
+      technologies.push({ name: 'CentOS', category: 'Backend', version });
+    } else if (bannerLower.includes('debian')) {
+      const version = banner.match(/debian[^\d]*(\d+)/i)?.[1] || null;
+      technologies.push({ name: 'Debian', category: 'Backend', version });
+    } else if (bannerLower.includes('windows')) {
+      technologies.push({ name: 'Windows Server', category: 'Backend', version: null });
+    }
+    
+    // Programming languages/frameworks
+    if (bannerLower.includes('php')) {
+      const version = banner.match(/php\/(\d+\.\d+\.\d+)/i)?.[1] || null;
+      technologies.push({ name: 'PHP', category: 'Backend', version });
+    } else if (bannerLower.includes('node.js') || bannerLower.includes('nodejs')) {
+      const version = banner.match(/node\.?js[^\d]*(\d+\.\d+)/i)?.[1] || null;
+      technologies.push({ name: 'Node.js', category: 'Backend', version });
+    } else if (bannerLower.includes('python')) {
+      const version = banner.match(/python[^\d]*(\d+\.\d+)/i)?.[1] || null;
+      technologies.push({ name: 'Python', category: 'Backend', version });
+    }
+    
+    // SSL/TLS
+    if (bannerLower.includes('openssl')) {
+      const version = banner.match(/openssl\/(\d+\.\d+\.\d+[a-z]*)/i)?.[1] || null;
+      technologies.push({ name: 'OpenSSL', category: 'Security', version });
+    }
+    
+    // If we found technologies from banner, return them
+    if (technologies.length > 0) {
+      console.log(`Found technologies from banner:`, technologies);
+      return technologies;
+    }
+  }
+  
+  // Fallback to port-based detection with more realistic assumptions
   const portMappings: Record<number, Technology[]> = {
-    21: [{ name: 'FTP', category: 'Protocol', version: '2.0' }],
-    22: [{ name: 'SSH', category: 'Protocol', version: '2.0' }],
-    23: [{ name: 'Telnet', category: 'Protocol', version: '1.0' }],
-    25: [{ name: 'SMTP', category: 'Protocol', version: '1.0' }],
+    21: [{ name: 'FTP', category: 'Protocol', version: null }],
+    22: [{ name: 'SSH', category: 'Protocol', version: null }],
+    23: [{ name: 'Telnet', category: 'Protocol', version: null }],
+    25: [{ name: 'SMTP', category: 'Protocol', version: null }],
     53: [{ name: 'DNS', category: 'Protocol', version: null }],
-    80: [
-      { name: 'HTTP', category: 'Protocol', version: '1.1' },
-      { name: 'HTML5', category: 'Frontend', version: '5.0' }
-    ],
-    110: [{ name: 'POP3', category: 'Protocol', version: '3' }],
-    143: [{ name: 'IMAP', category: 'Protocol', version: '4rev1' }],
-    389: [{ name: 'LDAP', category: 'Protocol', version: '3' }],
+    80: [{ name: 'HTTP', category: 'Protocol', version: '1.1' }],
+    110: [{ name: 'POP3', category: 'Protocol', version: null }],
+    143: [{ name: 'IMAP', category: 'Protocol', version: null }],
+    389: [{ name: 'LDAP', category: 'Protocol', version: null }],
     443: [
       { name: 'HTTPS', category: 'Protocol', version: '1.1' },
-      { name: 'TLS', category: 'Security', version: '1.3' },
-      { name: 'HTML5', category: 'Frontend', version: '5.0' }
+      { name: 'TLS', category: 'Security', version: null }
     ],
-    445: [{ name: 'SMB', category: 'Protocol', version: '3.1.1' }],
+    445: [{ name: 'SMB', category: 'Protocol', version: null }],
     993: [
-      { name: 'IMAPS', category: 'Protocol', version: '4rev1' },
-      { name: 'TLS', category: 'Security', version: '1.3' }
+      { name: 'IMAPS', category: 'Protocol', version: null },
+      { name: 'TLS', category: 'Security', version: null }
     ],
     995: [
-      { name: 'POP3S', category: 'Protocol', version: '3' },
-      { name: 'TLS', category: 'Security', version: '1.3' }
+      { name: 'POP3S', category: 'Protocol', version: null },
+      { name: 'TLS', category: 'Security', version: null }
     ],
-    1433: [{ name: 'Microsoft SQL Server', category: 'Database', version: '2019' }],
-    1521: [{ name: 'Oracle Database', category: 'Database', version: '19c' }],
-    2049: [{ name: 'NFS', category: 'Protocol', version: '4.2' }],
-    3306: [{ name: 'MySQL', category: 'Database', version: '8.0' }],
-    3389: [{ name: 'RDP', category: 'Protocol', version: '10.0' }],
-    5432: [{ name: 'PostgreSQL', category: 'Database', version: '14.0' }],
-    5900: [{ name: 'VNC', category: 'Protocol', version: '3.8' }],
-    5985: [{ name: 'WinRM', category: 'Protocol', version: '1.0' }],
+    1433: [{ name: 'Microsoft SQL Server', category: 'Database', version: null }],
+    1521: [{ name: 'Oracle Database', category: 'Database', version: null }],
+    2049: [{ name: 'NFS', category: 'Protocol', version: null }],
+    3306: [{ name: 'MySQL', category: 'Database', version: null }],
+    3389: [{ name: 'RDP', category: 'Protocol', version: null }],
+    5432: [{ name: 'PostgreSQL', category: 'Database', version: null }],
+    5900: [{ name: 'VNC', category: 'Protocol', version: null }],
+    5985: [{ name: 'WinRM', category: 'Protocol', version: null }],
     5986: [
-      { name: 'WinRM', category: 'Protocol', version: '1.0' },
-      { name: 'TLS', category: 'Security', version: '1.3' }
+      { name: 'WinRM', category: 'Protocol', version: null },
+      { name: 'TLS', category: 'Security', version: null }
     ],
-    6379: [{ name: 'Redis', category: 'Database', version: '6.2' }],
-    7001: [{ name: 'WebLogic Server', category: 'Web Server', version: '14.1.1' }],
-    8000: [
-      { name: 'HTTP', category: 'Protocol', version: '1.1' },
-      { name: 'Node.js', category: 'Backend', version: '16.0' }
-    ],
-    8009: [{ name: 'AJP', category: 'Protocol', version: '1.3' }],
-    8080: [
-      { name: 'HTTP', category: 'Protocol', version: '1.1' },
-      { name: 'Apache Tomcat', category: 'Web Server', version: '10.0' }
-    ],
-    8081: [
-      { name: 'HTTP', category: 'Protocol', version: '1.1' },
-      { name: 'Nexus', category: 'Repository', version: '3.0' }
-    ],
+    6379: [{ name: 'Redis', category: 'Database', version: null }],
+    8000: [{ name: 'HTTP', category: 'Protocol', version: '1.1' }],
+    8080: [{ name: 'HTTP', category: 'Protocol', version: '1.1' }],
     8443: [
       { name: 'HTTPS', category: 'Protocol', version: '1.1' },
-      { name: 'TLS', category: 'Security', version: '1.3' }
+      { name: 'TLS', category: 'Security', version: null }
     ],
-    9000: [{ name: 'Jenkins', category: 'CI/CD', version: '2.0' }],
-    9090: [
-      { name: 'WebSocket', category: 'Protocol', version: '13' },
-      { name: 'Prometheus', category: 'Monitoring', version: '2.0' }
-    ],
-    9200: [{ name: 'Elasticsearch', category: 'Search', version: '7.0' }],
-    11211: [{ name: 'Memcached', category: 'Cache', version: '1.6' }],
-    27017: [{ name: 'MongoDB', category: 'Database', version: '5.0' }]
+    9200: [{ name: 'Elasticsearch', category: 'Search', version: null }],
+    27017: [{ name: 'MongoDB', category: 'Database', version: null }]
   };
   
-  // Add technologies based on port number
+  // Add technologies based on port number only if no banner analysis was done
   if (portMappings[port]) {
     technologies.push(...portMappings[port]);
   }
   
-  // Add web server technologies if this is a web port
-  if ([80, 443, 8000, 8080, 8081, 8443, 9000].includes(port)) {
-    technologies.push(
-      { name: 'HTML5', category: 'Frontend', version: '5.0' },
-      { name: 'CSS3', category: 'Frontend', version: '3.0' },
-      { name: 'JavaScript', category: 'Frontend', version: 'ES2022' }
-    );
-  }
-  
+  console.log(`Final technologies detected for port ${port}:`, technologies);
   return technologies;
 }
 
@@ -415,11 +527,11 @@ export async function performScan(
       }
     }
     
-    // 8. Detect technologies based on open ports
+    // 8. Detect technologies based on open ports and banners
     const technologies: Technology[] = [];
     for (const port of openPorts) {
       try {
-        const tech = await detectTechnologies(ip, port.port);
+        const tech = await detectTechnologies(ip, port.port, port.banner);
         technologies.push(...tech);
       } catch (error) {
         console.error(`Failed to detect technologies for port ${port.port}:`, error);
