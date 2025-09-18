@@ -1,5 +1,4 @@
 import * as React from 'react';
-import Image from 'next/image';
 
 interface LogoProps {
   className?: string;
@@ -7,17 +6,29 @@ interface LogoProps {
   height?: number;
 }
 
-export function Logo({ className = "h-8 w-8", width = 32, height = 32 }: LogoProps) {
+export function Logo({ className = "h-8 w-8" }: LogoProps) {
   return (
     <div className={className}>
-      <Image
-        src="/favicon-96x96.png"
-        alt="Nrecon Logo"
-        width={width}
-        height={height}
-        className="w-full h-full object-contain"
-        priority
-      />
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-full h-full text-primary"
+      >
+        {/* Shield base */}
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        {/* Radar/scan circle */}
+        <circle cx="12" cy="10" r="3" />
+        {/* Scan lines */}
+        <path d="M12 7v6" />
+        <path d="M9.5 8.5l5 3" />
+        {/* Center dot */}
+        <circle cx="12" cy="10" r="1" fill="currentColor" />
+      </svg>
     </div>
   );
 }

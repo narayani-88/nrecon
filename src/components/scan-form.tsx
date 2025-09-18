@@ -45,7 +45,7 @@ export function ScanForm({ onSubmit, isLoading }: ScanFormProps) {
     <Card className="w-full shadow-lg">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-4">
-          <Logo className="h-16 w-16" width={64} height={64} />
+          <Logo className="h-16 w-16" />
         </div>
         <CardTitle className="text-2xl">New Scan</CardTitle>
         <CardDescription>Enter a target IP address or hostname to begin scanning.</CardDescription>
