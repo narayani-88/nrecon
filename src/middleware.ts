@@ -41,7 +41,7 @@ export function middleware(request: NextRequest) {
     `img-src 'self' data: blob: https: http: ${isDevelopment ? '*' : ''}`,
     
     // Connections
-    `connect-src 'self' https: wss: http: ${isDevelopment ? '*' : 'https://*.googleapis.com https://generativelanguage.googleapis.com https://*.netlify.app https://nrecon.netlify.app'}`,
+    `connect-src 'self' https: wss: http: ${isDevelopment ? '*' : 'https://*.googleapis.com https://generativelanguage.googleapis.com https://*.netlify.app https://nrecon.netlify.app https://whois.freeapi.app https://api.whois.vu'}`,
     
     // Other
     `frame-src 'self' https: http: ${isDevelopment ? '*' : ''}`,

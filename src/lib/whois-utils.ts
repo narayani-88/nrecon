@@ -6,47 +6,54 @@ const execAsync = promisify(exec);
 
 export async function lookupWhois(domain: string): Promise<WhoisData | null> {
   try {
-    // First, check if whois is installed
-    try {
-      await execAsync('whois --version');
-    } catch (e) {
-      console.error('whois command not found. Please install whois package.');
+    // Use a WHOIS API service instead of system command for better compatibility
+    const response = await fetch(`https://whois.freeapi.app/api/whois?domainName=${encodeURIComponent(domain)}`);
+    
+    if (!response.ok) {
+      console.error('WHOIS API request failed:', response.status);
       return null;
     }
-
-    // Execute whois command
-    const { stdout, stderr } = await execAsync(`whois ${domain}`);
     
-    if (stderr) {
-      console.error('WHOIS lookup error:', stderr);
+    const data = await response.json();
+    
+    if (!data || !data.data) {
+      console.error('Invalid WHOIS API response');
       return null;
     }
-
-    // Parse the WHOIS data
-    const whoisText = stdout.toString();
     
-    // Extract registrar
-    const registrarMatch = whoisText.match(/Registrar: (.+)/i) || 
-                         whoisText.match(/Registrar WHOIS Server: (.+)/i);
-    
-    // Extract creation date
-    const creationDateMatch = whoisText.match(/Creation Date: (.+)/i) || 
-                            whoisText.match(/Created On: (.+)/i) ||
-                            whoisText.match(/Registered: (.+)/i);
-    
-    // Extract expiration date
-    const expirationDateMatch = whoisText.match(/Expiration Date: (.+)/i) || 
-                              whoisText.match(/Registry Expiry Date: (.+)/i) ||
-                              whoisText.match(/Expires: (.+)/i);
+    const whoisData = data.data;
     
     return {
-      registrar: registrarMatch ? registrarMatch[1].trim() : null,
-      creationDate: creationDateMatch ? new Date(creationDateMatch[1].trim()).toISOString() : null,
-      expirationDate: expirationDateMatch ? new Date(expirationDateMatch[1].trim()).toISOString() : null,
-      raw: whoisText
+      registrar: whoisData.registrar || whoisData.registrar_name || null,
+      creationDate: whoisData.creation_date || whoisData.created_date || null,
+      expirationDate: whoisData.expiration_date || whoisData.expires_date || null,
+      raw: JSON.stringify(whoisData, null, 2)
     };
   } catch (error) {
     console.error('WHOIS lookup failed:', error);
+    
+    // Fallback: try alternative API
+    try {
+      const response = await fetch(`https://api.whois.vu/?q=${encodeURIComponent(domain)}`);
+      if (response.ok) {
+        const text = await response.text();
+        
+        // Parse basic info from text response
+        const registrarMatch = text.match(/Registrar: (.+)/i);
+        const creationMatch = text.match(/Creation Date: (.+)/i);
+        const expirationMatch = text.match(/Expiration Date: (.+)/i);
+        
+        return {
+          registrar: registrarMatch ? registrarMatch[1].trim() : null,
+          creationDate: creationMatch ? creationMatch[1].trim() : null,
+          expirationDate: expirationMatch ? expirationMatch[1].trim() : null,
+          raw: text
+        };
+      }
+    } catch (fallbackError) {
+      console.error('Fallback WHOIS lookup also failed:', fallbackError);
+    }
+    
     return null;
   }
 }

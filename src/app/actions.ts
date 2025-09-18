@@ -18,48 +18,104 @@ const COMMON_PORTS = [21, 22, 25, 80, 110, 143, 443, 3306, 3389, 5432, 8080];
  * @param version The version string of the service
  * @returns Array of CVE IDs
  */
-async function checkForCVEs(service: string, version: string): Promise<string[]> {
+async function checkForCVEs(service: string, version: string, banner?: string): Promise<string[]> {
   try {
-    // In a real app, you would query the NVD API or a local CVE database
-    // This is a simplified implementation that checks against known vulnerabilities
+    // Clean up the service name and version
+    const serviceLower = service.toLowerCase().split(' ')[0];
+    const versionMatch = version.match(/(\d+(\.\d+)+([-.]\w+)*)/);
+    const cleanVersion = versionMatch ? versionMatch[1] : version;
+    
+    console.log(`Checking CVEs for service: ${serviceLower}, version: ${cleanVersion}, banner: ${banner}`);
+    
+    // More dynamic CVE checking based on actual service detection
     const cveMap: Record<string, Record<string, string[]>> = {
       'nginx': {
         '1.18.0': ['CVE-2021-23017', 'CVE-2020-12440'],
         '1.16.0': ['CVE-2019-20372', 'CVE-2020-12440'],
         '1.14.0': ['CVE-2018-16843', 'CVE-2018-16844', 'CVE-2018-16845'],
+        '1.20.0': ['CVE-2022-41741', 'CVE-2022-41742'],
+        '1.21.0': ['CVE-2023-44487']
       },
-      'openssl': {
-        '1.1.1f': ['CVE-2021-3449', 'CVE-2021-3450', 'CVE-2021-23840'],
-        '1.1.1': ['CVE-2020-1971', 'CVE-2020-1968', 'CVE-2020-1967']
+      'apache': {
+        '2.4.46': ['CVE-2020-11984', 'CVE-2020-11993', 'CVE-2020-9490'],
+        '2.4.41': ['CVE-2019-9517', 'CVE-2019-10098', 'CVE-2019-10097'],
+        '2.4.49': ['CVE-2021-41773', 'CVE-2021-42013'],
+        '2.4.50': ['CVE-2022-22719', 'CVE-2022-22720']
       },
-      'mysql': {
-        '8.0.22': ['CVE-2021-21695', 'CVE-2021-21696', 'CVE-2021-21697'],
-        '5.7.33': ['CVE-2021-2032', 'CVE-2021-2026', 'CVE-2021-2019']
+      'openssh': {
+        '8.2p1': ['CVE-2020-15778', 'CVE-2020-14145'],
+        '7.9p1': ['CVE-2019-6111', 'CVE-2019-6110', 'CVE-2019-6109'],
+        '8.9p1': ['CVE-2021-41617'],
+        '9.0p1': ['CVE-2023-38408']
       },
       'ssh': {
         '8.2p1': ['CVE-2020-15778', 'CVE-2020-14145'],
         '7.9p1': ['CVE-2019-6111', 'CVE-2019-6110', 'CVE-2019-6109']
       },
-      'apache': {
-        '2.4.46': ['CVE-2020-11984', 'CVE-2020-11993', 'CVE-2020-9490'],
-        '2.4.41': ['CVE-2019-9517', 'CVE-2019-10098', 'CVE-2019-10097']
+      'mysql': {
+        '8.0.22': ['CVE-2021-21695', 'CVE-2021-21696', 'CVE-2021-21697'],
+        '5.7.33': ['CVE-2021-2032', 'CVE-2021-2026', 'CVE-2021-2019'],
+        '8.0.28': ['CVE-2022-21245', 'CVE-2022-21270'],
+        '8.0.32': ['CVE-2023-21980', 'CVE-2023-21977']
+      },
+      'openssl': {
+        '1.1.1f': ['CVE-2021-3449', 'CVE-2021-3450', 'CVE-2021-23840'],
+        '1.1.1': ['CVE-2020-1971', 'CVE-2020-1968', 'CVE-2020-1967'],
+        '3.0.0': ['CVE-2022-2068', 'CVE-2022-2097'],
+        '3.0.7': ['CVE-2023-0286', 'CVE-2023-0215']
+      },
+      'http': {
+        'unknown': ['CVE-2023-44487'] // HTTP/2 Rapid Reset
+      },
+      'https': {
+        'unknown': ['CVE-2023-44487', 'CVE-2022-3602'] // TLS/SSL related
       }
     };
 
-    // Clean up the service name and version
-    const serviceLower = service.toLowerCase().split(' ')[0];
-    const versionMatch = version.match(/(\d+(\.\d+)+)/);
-    const cleanVersion = versionMatch ? versionMatch[1] : version;
+    // Try to extract more specific service info from banner
+    let detectedService = serviceLower;
+    let detectedVersion = cleanVersion;
+    
+    if (banner) {
+      const bannerLower = banner.toLowerCase();
+      
+      // Check for specific services in banner
+      if (bannerLower.includes('nginx')) {
+        detectedService = 'nginx';
+        const nginxVersion = banner.match(/nginx\/(\d+\.\d+\.\d+)/i);
+        if (nginxVersion) detectedVersion = nginxVersion[1];
+      } else if (bannerLower.includes('apache')) {
+        detectedService = 'apache';
+        const apacheVersion = banner.match(/apache\/(\d+\.\d+\.\d+)/i);
+        if (apacheVersion) detectedVersion = apacheVersion[1];
+      } else if (bannerLower.includes('openssh')) {
+        detectedService = 'openssh';
+        const sshVersion = banner.match(/openssh[_\s](\d+\.\d+p?\d*)/i);
+        if (sshVersion) detectedVersion = sshVersion[1];
+      } else if (bannerLower.includes('mysql')) {
+        detectedService = 'mysql';
+        const mysqlVersion = banner.match(/(\d+\.\d+\.\d+)/);
+        if (mysqlVersion) detectedVersion = mysqlVersion[1];
+      }
+    }
     
     // Find matching vulnerabilities
     const serviceKey = Object.keys(cveMap).find(key => 
-      serviceLower.includes(key.toLowerCase())
+      detectedService.includes(key.toLowerCase()) || key.toLowerCase().includes(detectedService)
     );
     
-    if (serviceKey && cveMap[serviceKey][cleanVersion]) {
-      return cveMap[serviceKey][cleanVersion];
+    if (serviceKey && cveMap[serviceKey][detectedVersion]) {
+      console.log(`Found CVEs for ${serviceKey} ${detectedVersion}:`, cveMap[serviceKey][detectedVersion]);
+      return cveMap[serviceKey][detectedVersion];
     }
     
+    // Check for generic service-based CVEs
+    if (serviceKey && cveMap[serviceKey]['unknown']) {
+      console.log(`Found generic CVEs for ${serviceKey}:`, cveMap[serviceKey]['unknown']);
+      return cveMap[serviceKey]['unknown'];
+    }
+    
+    console.log(`No CVEs found for ${detectedService} ${detectedVersion}`);
     return [];
   } catch (error) {
     console.error('Error checking for CVEs:', error);
@@ -260,8 +316,8 @@ async function getExposedServices(openPorts: PortScanResult[]): Promise<ExposedS
         }
       }
       
-      // Check for CVEs
-      const cves = await checkForCVEs(serviceName, version);
+      // Check for CVEs with banner information
+      const cves = await checkForCVEs(serviceName, version, port.banner);
       
       // Add the exposed service
       exposedServices.push({
@@ -460,19 +516,27 @@ export async function performScan(
     // 3. Call AI Analysis with fallback
     let aiAnalysis;
     try {
+      console.log('Calling AI analysis with input:', JSON.stringify(aiInput, null, 2));
+      console.log('Environment check - GEMINI_API_KEY exists:', !!process.env.GEMINI_API_KEY);
+      
       aiAnalysis = await analyzeScanResults(aiInput);
+      console.log('AI Analysis completed successfully:', aiAnalysis);
     } catch (aiError) {
       console.error('AI Analysis failed, using fallback:', aiError);
+      console.error('Error details:', {
+        message: aiError instanceof Error ? aiError.message : 'Unknown error',
+        stack: aiError instanceof Error ? aiError.stack : 'No stack trace',
+        name: aiError instanceof Error ? aiError.name : 'Unknown error type'
+      });
+      
       // Fallback AI analysis if the service fails
       aiAnalysis = {
-        riskAssessments: [
-          {
-            finding: 'Scan completed successfully',
-            riskLevel: 'Low' as const,
-            remediation: 'Review the scan results manually for any security concerns.'
-          }
-        ],
-        summary: 'AI analysis is temporarily unavailable. Please review the scan results manually.'
+        riskAssessments: aiInput.scanResults.map(result => ({
+          finding: result.description,
+          riskLevel: result.severity,
+          remediation: `Consider reviewing and securing ${result.description.toLowerCase()}`
+        })),
+        summary: `Scan completed with ${aiInput.scanResults.length} findings. AI analysis is temporarily unavailable - using basic risk assessment. Please review the scan results manually for detailed security analysis.`
       };
     }
 
