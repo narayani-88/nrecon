@@ -1,5 +1,6 @@
 [build]
   command = "npm run build"
+  publish = ".next"
   functions = ".netlify/functions"
   image = "ubuntu-20.04"  # Use Ubuntu 20.04 which has Nmap available in the package manager
 
