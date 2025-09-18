@@ -92,36 +92,133 @@ async function findNmapPath(): Promise<string> {
  * @param ip The IP address to scan
  * @returns Promise with array of port scan results
  */
-// Mock scan results for when Nmap is not available
-const MOCK_SCAN_RESULTS: PortScanResult[] = [
-  {
-    port: 80,
-    status: 'open',
-    state: 'open',
-    service: 'http',
-    version: 'Apache/2.4.41 (Ubuntu)',
-    protocol: 'tcp',
-    isMock: true
-  },
-  {
-    port: 443,
-    status: 'open',
-    state: 'open',
-    service: 'https',
-    version: 'Apache/2.4.41 (Ubuntu)',
-    protocol: 'tcp',
-    isMock: true
-  },
-  {
-    port: 22,
-    status: 'open',
-    state: 'open',
-    service: 'ssh',
-    version: 'OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)',
-    protocol: 'tcp',
-    isMock: true
+// Generate dynamic mock scan results for when Nmap is not available
+function generateMockScanResults(target: string): PortScanResult[] {
+  console.log(`[PORT SCANNER] Generating mock scan results for: ${target}`);
+  
+  // Create a simple hash from the target to ensure consistent but different results
+  const targetHash = target.split('').reduce((hash, char) => {
+    return ((hash << 5) - hash) + char.charCodeAt(0);
+  }, 0);
+  
+  // Use hash to determine which services and versions to show
+  const hashAbs = Math.abs(targetHash);
+  
+  const possibleServices = [
+    // Web servers
+    {
+      port: 80,
+      service: 'http',
+      versions: [
+        'nginx/1.18.0 (Ubuntu)',
+        'nginx/1.20.1',
+        'Apache/2.4.41 (Ubuntu)',
+        'Apache/2.4.46 (Win64)',
+        'Microsoft-IIS/10.0',
+        'nginx/1.21.6',
+        'Apache/2.4.52 (Ubuntu)'
+      ]
+    },
+    {
+      port: 443,
+      service: 'https',
+      versions: [
+        'nginx/1.18.0 (Ubuntu)',
+        'nginx/1.20.1',
+        'Apache/2.4.41 (Ubuntu)',
+        'Apache/2.4.46 (Win64)',
+        'Microsoft-IIS/10.0',
+        'nginx/1.21.6',
+        'Apache/2.4.52 (Ubuntu)'
+      ]
+    },
+    // SSH
+    {
+      port: 22,
+      service: 'ssh',
+      versions: [
+        'OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)',
+        'OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)',
+        'OpenSSH 8.9p1 Ubuntu 3ubuntu0.1 (Ubuntu Linux; protocol 2.0)',
+        'OpenSSH 9.0p1 Ubuntu 1ubuntu8.5 (Ubuntu Linux; protocol 2.0)',
+        'OpenSSH 8.0p1 (protocol 2.0)'
+      ]
+    },
+    // Database
+    {
+      port: 3306,
+      service: 'mysql',
+      versions: [
+        'MySQL 8.0.32-0ubuntu0.20.04.2',
+        'MySQL 5.7.33-0ubuntu0.18.04.1',
+        'MySQL 8.0.28-0ubuntu0.20.04.3',
+        'MariaDB 10.3.34-0ubuntu0.20.04.1'
+      ]
+    },
+    // FTP
+    {
+      port: 21,
+      service: 'ftp',
+      versions: [
+        'vsftpd 3.0.3',
+        'ProFTPD 1.3.6',
+        'Pure-FTPd 1.0.49',
+        'FileZilla Server 0.9.60'
+      ]
+    }
+  ];
+  
+  const results: PortScanResult[] = [];
+  
+  // Determine which services to include based on hash
+  const numServices = 2 + (hashAbs % 3); // 2-4 services
+  const selectedServices = [];
+  
+  // Always include HTTP/HTTPS for web targets
+  if (hashAbs % 2 === 0) {
+    selectedServices.push(possibleServices[0]); // HTTP
+    if (hashAbs % 3 === 0) {
+      selectedServices.push(possibleServices[1]); // HTTPS
+    }
+  } else {
+    selectedServices.push(possibleServices[1]); // HTTPS only
   }
-];
+  
+  // Add SSH most of the time
+  if (hashAbs % 4 !== 0) {
+    selectedServices.push(possibleServices[2]); // SSH
+  }
+  
+  // Sometimes add database
+  if (hashAbs % 5 === 0) {
+    selectedServices.push(possibleServices[3]); // MySQL
+  }
+  
+  // Sometimes add FTP
+  if (hashAbs % 7 === 0) {
+    selectedServices.push(possibleServices[4]); // FTP
+  }
+  
+  // Generate results for selected services
+  selectedServices.forEach((serviceConfig, index) => {
+    const versionIndex = (hashAbs + index) % serviceConfig.versions.length;
+    const selectedVersion = serviceConfig.versions[versionIndex];
+    
+    results.push({
+      port: serviceConfig.port,
+      status: 'open',
+      state: 'open',
+      service: serviceConfig.service,
+      banner: selectedVersion,
+      version: selectedVersion,
+      protocol: 'tcp',
+      isMock: true
+    });
+  });
+  
+  console.log(`[PORT SCANNER] Generated ${results.length} mock services:`, results.map(r => `${r.port}/${r.service}`));
+  return results;
+}
 
 export async function scanPorts(ip: string): Promise<PortScanResult[]> {
   try {
@@ -130,10 +227,10 @@ export async function scanPorts(ip: string): Promise<PortScanResult[]> {
     // Find nmap executable
     const nmapPath = await findNmapPath();
     
-    // If Nmap is not found, return mock data
+    // If Nmap is not found, return dynamic mock data
     if (nmapPath === 'nmap-not-found') {
-      console.warn('[PORT SCANNER] Running in mock mode - using sample data');
-      return MOCK_SCAN_RESULTS;
+      console.warn('[PORT SCANNER] Running in mock mode - using dynamic sample data');
+      return generateMockScanResults(ip);
     }
     
     // Build the nmap command with a shorter timeout for testing

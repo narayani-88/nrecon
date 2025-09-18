@@ -205,7 +205,11 @@ const Details = ({ data }: DashboardProps) => {
                                 </Badge>
                             </TableCell>
                             <TableCell>{p.service || 'N/A'}</TableCell>
-                            <TableCell className="font-mono text-xs">{p.banner || 'N/A'}</TableCell>
+                            <TableCell className="font-mono text-xs max-w-xs">
+                                <div className="truncate" title={p.banner || 'N/A'}>
+                                    {p.banner || 'N/A'}
+                                </div>
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -234,7 +238,11 @@ const Details = ({ data }: DashboardProps) => {
                     {data.scanData.dns.map((r, i) => (
                         <TableRow key={i}>
                             <TableCell><Badge variant="outline">{r.type}</Badge></TableCell>
-                            <TableCell className="font-mono text-xs max-w-xs truncate">{r.value}</TableCell>
+                            <TableCell className="font-mono text-xs max-w-xs">
+                                <div className="truncate" title={r.value}>
+                                    {r.value}
+                                </div>
+                            </TableCell>
                             <TableCell>{r.ttl}s</TableCell>
                         </TableRow>
                     ))}
@@ -257,9 +265,11 @@ const Details = ({ data }: DashboardProps) => {
                 <p><span className="font-medium text-muted-foreground w-32 inline-block">Expiration Date:</span> {data.scanData.whois?.expirationDate ? new Date(data.scanData.whois.expirationDate).toLocaleDateString() : 'N/A'}</p>
             </div>
             <Separator className="my-6" />
-            <p className="text-xs text-muted-foreground font-mono whitespace-pre-wrap bg-muted p-4 rounded-md">
-                {data.scanData.whois?.raw}
-            </p>
+            <div className="text-xs text-muted-foreground font-mono bg-muted p-4 rounded-md max-h-96 overflow-y-auto">
+                <pre className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                    {data.scanData.whois?.raw || 'No raw WHOIS data available'}
+                </pre>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
@@ -272,7 +282,7 @@ const Details = ({ data }: DashboardProps) => {
             <CardContent>
                 <div className="border rounded-lg p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {data.scanData.subdomains.map(sub => (
-                        <div key={sub} className="p-2 bg-accent rounded-md text-sm font-mono truncate">{sub}</div>
+                        <div key={sub} className="p-2 bg-accent rounded-md text-sm font-mono truncate" title={sub}>{sub}</div>
                     ))}
                 </div>
             </CardContent>
